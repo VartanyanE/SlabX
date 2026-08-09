@@ -1,17 +1,46 @@
 import { resolve } from "node:path";
 import { config as loadDotenv } from "dotenv";
 import { loadServerEnvironment } from "@slabx/config";
-import { createDatabaseHealthCheck } from "@slabx/database";
+import { createDatabaseHealthCheck, createDatabasePool } from "@slabx/database";
 import { createLogger } from "@slabx/observability";
 import { createApp } from "./app.js";
+import { PendingEmailDelivery } from "./identity/email.js";
+import { GoogleOidc } from "./identity/google.js";
+import { PostgresIdentityRepository } from "./identity/postgres-repository.js";
+import { createIdentityRouter } from "./identity/routes.js";
+import { IdentityService } from "./identity/service.js";
 
 loadDotenv({ path: resolve(process.cwd(), "../../.env"), quiet: true });
 const environment = loadServerEnvironment(process.env);
 const logger = createLogger("slabx-api", environment.LOG_LEVEL);
+const identityService = new IdentityService({
+  repository: new PostgresIdentityRepository(
+    createDatabasePool(environment.DATABASE_URL),
+  ),
+  email: new PendingEmailDelivery(logger),
+  secret: environment.SESSION_SECRET,
+  passwordPepper: environment.PASSWORD_PEPPER,
+});
+const identityRouter = createIdentityRouter({
+  service: identityService,
+  google: new GoogleOidc({
+    ...(environment.GOOGLE_CLIENT_ID
+      ? { clientId: environment.GOOGLE_CLIENT_ID }
+      : {}),
+    ...(environment.GOOGLE_CLIENT_SECRET
+      ? { clientSecret: environment.GOOGLE_CLIENT_SECRET }
+      : {}),
+    callbackUrl: environment.GOOGLE_CALLBACK_URL,
+    secret: environment.SESSION_SECRET,
+  }),
+  secureCookies: environment.NODE_ENV === "production",
+  webOrigin: environment.WEB_ORIGIN,
+});
 const app = createApp({
   databaseHealthCheck: createDatabaseHealthCheck(environment.DATABASE_URL),
   logger,
   webOrigin: environment.WEB_ORIGIN,
+  identityRouter,
 });
 
 const server = app.listen(environment.API_PORT, () => {

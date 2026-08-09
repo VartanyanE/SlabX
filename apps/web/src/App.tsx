@@ -1,6 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { NavLink, Route, Routes } from "react-router";
 import { getApiHealth } from "./api/client";
+import {
+  AccountPage,
+  ForgotPasswordPage,
+  LoginPage,
+  RegisterPage,
+  ResetPasswordPage,
+  VerifyEmailPage,
+} from "./AuthPages";
 
 function Home() {
   const health = useQuery({
@@ -100,11 +108,17 @@ export function App() {
           <span>SLABX</span>
         </NavLink>
         <nav aria-label="Primary">
-          <span>Marketplace coming soon</span>
+          <NavLink to="/login">Sign in</NavLink>
         </nav>
       </header>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/account" element={<AccountPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <footer>
