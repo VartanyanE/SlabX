@@ -1,0 +1,7 @@
+node_modules
+dist
+coverage
+docs/openapi.json
+docs/*.md
+README.md
+pnpm-lock.yaml

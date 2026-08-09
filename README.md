@@ -2,7 +2,7 @@
 
 SlabX is a planned mobile-first marketplace for buying, selling, offering on, collecting, and eventually trading collectible cards.
 
-This repository is currently in **Milestone 0: Architecture**. It intentionally contains planning documentation rather than application code. Architecture approval is required before implementation begins.
+This repository has completed **Milestone 1: Platform Foundation**. It contains the mobile-first web shell, versioned API, PostgreSQL/Prisma baseline, shared packages, automated checks, and deployment-ready container definitions. Marketplace features begin in Milestone 2.
 
 ## Product vision
 
@@ -58,6 +58,23 @@ Explicitly deferred: card-for-card trading, cards-plus-cash trades, market-price
 
 ## Status and next step
 
-The current workspace was empty and was not a Git repository. These files form a repository-ready architecture package.
+Milestone 1 provides:
 
-**Next task after approval:** initialize the TypeScript monorepo foundation from `docs/ARCHITECTURE.md` and Milestone 1 in `docs/ROADMAP.md`, without implementing authentication or marketplace features.
+- React/Vite web application in `apps/web`
+- Express API with liveness, readiness, request IDs, safe errors, and OpenAPI in `apps/api`
+- PostgreSQL 18 and Prisma baseline in `packages/database`
+- typed contracts, environment validation, structured logging, and test helpers
+- unit/API/component tests, Playwright smoke coverage, and GitHub Actions CI
+- local PostgreSQL Compose configuration and production container definitions
+
+### Run locally
+
+1. Install Node.js 24 and enable the pinned pnpm version with Corepack.
+2. Copy `.env.example` to `.env` and keep the local placeholder credentials.
+3. Run `docker compose up -d postgres`.
+4. Run `pnpm install`, `pnpm db:migrate`, and `pnpm db:seed`.
+5. Run `pnpm dev`, then open `http://localhost:5173`.
+
+Use `pnpm check` for the full local quality suite and `pnpm test:e2e` for browser smoke tests.
+
+**Next milestone:** implement authentication and profiles from Milestone 2 after product approval.
