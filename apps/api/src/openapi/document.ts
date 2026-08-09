@@ -1,0 +1,29 @@
+export const openApiDocument = {
+  openapi: "3.1.0",
+  info: {
+    title: "SlabX API",
+    version: "0.1.0",
+    description:
+      "Versioned API contract for the SlabX collectible card marketplace.",
+  },
+  servers: [{ url: "/api/v1" }],
+  paths: {
+    "/health/live": {
+      get: {
+        operationId: "getLiveness",
+        summary: "Process liveness",
+        responses: { "200": { description: "API process is running" } },
+      },
+    },
+    "/health/ready": {
+      get: {
+        operationId: "getReadiness",
+        summary: "Dependency readiness",
+        responses: {
+          "200": { description: "API and database are ready" },
+          "503": { description: "A required dependency is unavailable" },
+        },
+      },
+    },
+  },
+} as const;

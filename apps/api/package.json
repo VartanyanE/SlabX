@@ -1,0 +1,36 @@
+{
+  "name": "@slabx/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --conditions=development watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run src",
+    "openapi:generate": "tsx src/openapi/generate.ts"
+  },
+  "dependencies": {
+    "@slabx/config": "workspace:*",
+    "@slabx/contracts": "workspace:*",
+    "@slabx/database": "workspace:*",
+    "@slabx/observability": "workspace:*",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "pino": "^9.9.4",
+    "pino-http": "^11.0.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "supertest": "^7.1.4",
+    "@types/supertest": "^6.0.3",
+    "tsx": "^4.20.5",
+    "vitest": "^4.1.10"
+  }
+}
