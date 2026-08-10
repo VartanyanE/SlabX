@@ -17,6 +17,7 @@ import {
   SellingPage,
   WatchlistPage,
 } from "./ListingsPages";
+import { OffersPage } from "./OffersPage";
 
 function Home() {
   const health = useQuery({
@@ -118,6 +119,7 @@ export function App() {
         <nav aria-label="Primary">
           <NavLink to="/marketplace">Marketplace</NavLink>
           <NavLink to="/sell">Sell</NavLink>
+          <NavLink to="/offers">Offers</NavLink>
           <NavLink to="/collection">Collection</NavLink>
           <NavLink to="/login">Sign in</NavLink>
         </nav>
@@ -138,6 +140,7 @@ export function App() {
         <Route path="/sell" element={<SellPage />} />
         <Route path="/selling" element={<SellingPage />} />
         <Route path="/watchlist" element={<WatchlistPage />} />
+        <Route path="/offers" element={<OffersPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <footer>

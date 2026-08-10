@@ -2,7 +2,7 @@
 
 SlabX is a planned mobile-first marketplace for buying, selling, offering on, collecting, and eventually trading collectible cards.
 
-This repository includes Milestones 1–5: platform foundation, authentication and profiles, catalog and collection, image uploads, and listings and discovery.
+This repository includes Milestones 1–6: platform foundation, authentication and profiles, catalog and collection, image uploads, listings and discovery, and offer negotiation.
 
 ## Product vision
 
@@ -99,6 +99,8 @@ Milestone 5 adds:
 - condition disclosures, seller summaries, price history, and optimistic version checks
 - idempotent buyer watchlists and seller-owned inventory controls
 
+Milestone 6 adds immutable offer and counteroffer timelines, safe actor/state transitions, expiration processing, transactional notifications, and a checkout-eligible accepted-price reservation.
+
 ### Run locally
 
 1. Install Node.js 24 and enable the pinned pnpm version with Corepack.
@@ -109,4 +111,4 @@ Milestone 5 adds:
 
 Use `pnpm check` for the full local quality suite and `pnpm test:e2e` for browser smoke tests.
 
-Before staging, configure the providers listed in `.env.example`. The next product milestone is **Milestone 6: Offers and counteroffers**.
+Before staging, configure the providers listed in `.env.example`. The next product milestone is **Milestone 7: Checkout and Stripe Connect**.

@@ -160,6 +160,9 @@ importers:
       '@slabx/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@slabx/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@slabx/observability':
         specifier: workspace:*
         version: link:../../packages/observability

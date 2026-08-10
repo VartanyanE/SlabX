@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@slabx/config": "workspace:*",
+    "@slabx/database": "workspace:*",
     "@slabx/observability": "workspace:*"
   },
   "devDependencies": {

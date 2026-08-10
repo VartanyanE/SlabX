@@ -233,6 +233,49 @@ export const openApiDocument = {
       put: operation("watchListing", "Watch an active listing", 204),
       delete: operation("unwatchListing", "Remove a watched listing", 204),
     },
+    "/listings/{listingId}/offers": {
+      parameters: [listingIdParameter()],
+      post: operation("createOffer", "Create a buyer offer", 201),
+    },
+    "/me/offers": {
+      get: operation("listMyOffers", "List buyer and seller negotiations", 200),
+    },
+    "/offers/{threadId}": {
+      parameters: [threadIdParameter()],
+      get: operation(
+        "getOfferThread",
+        "Read an immutable negotiation timeline",
+        200,
+      ),
+    },
+    "/offers/{threadId}/counter": {
+      parameters: [threadIdParameter()],
+      post: operation(
+        "counterOffer",
+        "Counter the current offer revision",
+        201,
+      ),
+    },
+    "/offers/{threadId}/accept": {
+      parameters: [threadIdParameter()],
+      post: operation(
+        "acceptOffer",
+        "Accept and reserve the listing for checkout",
+        204,
+      ),
+    },
+    "/offers/{threadId}/decline": {
+      parameters: [threadIdParameter()],
+      post: operation(
+        "declineOffer",
+        "Decline the current offer revision",
+        204,
+      ),
+    },
+    "/offers/{threadId}/cancel": {
+      parameters: [threadIdParameter()],
+      post: operation("cancelOffer", "Cancel a pending buyer offer", 204),
+    },
   },
 } as const;
 
@@ -248,6 +291,15 @@ function itemIdParameter() {
 function listingIdParameter() {
   return {
     name: "listingId",
+    in: "path",
+    required: true,
+    schema: { type: "string", format: "uuid" },
+  } as const;
+}
+
+function threadIdParameter() {
+  return {
+    name: "threadId",
     in: "path",
     required: true,
     schema: { type: "string", format: "uuid" },

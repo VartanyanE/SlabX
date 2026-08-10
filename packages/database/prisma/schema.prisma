@@ -81,6 +81,19 @@ enum ListingStatus {
   CLOSED
 }
 
+enum OfferThreadStatus {
+  OPEN
+  ACCEPTED
+  DECLINED
+  CANCELLED
+  EXPIRED
+}
+
+enum OfferRevisionKind {
+  OFFER
+  COUNTER
+}
+
 model User {
   id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   emailNormalized String     @unique(map: "users_email_normalized_key") @map("email_normalized")
@@ -105,6 +118,10 @@ model User {
   mediaAssets     MediaAsset[]
   listings        Listing[]       @relation("ListingSeller")
   watchlist       WatchlistEntry[]
+  buyerOfferThreads OfferThread[] @relation("OfferBuyer")
+  sellerOfferThreads OfferThread[] @relation("OfferSeller")
+  offerRevisions OfferRevision[]
+  notifications Notification[]
 
   @@index([status, createdAt])
   @@map("users")
@@ -394,6 +411,9 @@ model Listing {
   minimumOfferMinor   BigInt?          @map("minimum_offer_minor")
   conditionDisclosure String           @map("condition_disclosure")
   publishedAt         DateTime?        @map("published_at") @db.Timestamptz(6)
+  reservedByUserId    String?          @map("reserved_by_user_id") @db.Uuid
+  reservedUntil       DateTime?        @map("reserved_until") @db.Timestamptz(6)
+  reservationReason   String?          @map("reservation_reason")
   version             Int              @default(1)
   createdAt           DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -402,12 +422,80 @@ model Listing {
   collectionItem      CollectionItem   @relation(fields: [collectionItemId], references: [id], onDelete: Restrict)
   priceHistory        ListingPriceHistory[]
   watchers            WatchlistEntry[]
+  offerThreads         OfferThread[]
 
   @@index([status, publishedAt(sort: Desc)])
   @@index([sellerUserId, status])
   @@index([priceMinor])
   @@index([collectionItemId])
   @@map("listings")
+}
+
+model OfferThread {
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listingId          String            @map("listing_id") @db.Uuid
+  buyerUserId        String            @map("buyer_user_id") @db.Uuid
+  sellerUserId       String            @map("seller_user_id") @db.Uuid
+  status             OfferThreadStatus @default(OPEN)
+  currentRevisionId  String?           @map("current_revision_id") @db.Uuid
+  acceptedPriceMinor BigInt?           @map("accepted_price_minor")
+  checkoutExpiresAt  DateTime?         @map("checkout_expires_at") @db.Timestamptz(6)
+  version            Int               @default(1)
+  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  listing            Listing           @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer              User              @relation("OfferBuyer", fields: [buyerUserId], references: [id], onDelete: Restrict)
+  seller             User              @relation("OfferSeller", fields: [sellerUserId], references: [id], onDelete: Restrict)
+  revisions          OfferRevision[]
+
+  @@index([buyerUserId, status, updatedAt(sort: Desc)])
+  @@index([sellerUserId, status, updatedAt(sort: Desc)])
+  @@index([listingId, status])
+  @@map("offer_threads")
+}
+
+model OfferRevision {
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  threadId    String            @map("thread_id") @db.Uuid
+  actorUserId String            @map("actor_user_id") @db.Uuid
+  kind        OfferRevisionKind
+  amountMinor BigInt            @map("amount_minor")
+  message     String?
+  idempotencyKey String          @unique @map("idempotency_key") @db.Uuid
+  expiresAt   DateTime          @map("expires_at") @db.Timestamptz(6)
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  thread      OfferThread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  actor       User              @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([threadId, createdAt])
+  @@index([expiresAt])
+  @@map("offer_revisions")
+}
+
+model Notification {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  type      String
+  payload   Json
+  readAt    DateTime? @map("read_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model OutboxEvent {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  topic       String
+  aggregateId String    @map("aggregate_id")
+  payload     Json
+  availableAt DateTime  @default(now()) @map("available_at") @db.Timestamptz(6)
+  processedAt DateTime? @map("processed_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([processedAt, availableAt])
+  @@map("outbox_events")
 }
 
 model ListingPriceHistory {
