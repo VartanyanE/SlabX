@@ -20,6 +20,7 @@ type AppDependencies = {
   webOrigin: string;
   clock?: () => Date;
   identityRouter?: Router;
+  catalogRouter?: Router;
 };
 
 export function createApp({
@@ -29,6 +30,7 @@ export function createApp({
   webOrigin,
   clock = () => new Date(),
   identityRouter,
+  catalogRouter,
 }: AppDependencies): Express {
   const app = express();
   app.disable("x-powered-by");
@@ -86,6 +88,7 @@ export function createApp({
     response.json(openApiDocument),
   );
   if (identityRouter) app.use("/api/v1", identityRouter);
+  if (catalogRouter) app.use("/api/v1", catalogRouter);
 
   app.use((_request, response) => {
     response.status(404).json({

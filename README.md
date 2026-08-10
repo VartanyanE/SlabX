@@ -2,7 +2,7 @@
 
 SlabX is a planned mobile-first marketplace for buying, selling, offering on, collecting, and eventually trading collectible cards.
 
-This repository has completed **Milestone 1: Platform Foundation** and now includes the **Milestone 2 authentication and profile implementation**. The platform has a mobile-first web shell, versioned API, PostgreSQL/Prisma data layer, shared packages, automated checks, and deployment-ready container definitions.
+This repository includes **Milestone 1: Platform Foundation**, **Milestone 2: Authentication and Profiles**, and the **Milestone 3 catalog and collection implementation**. The platform has a mobile-first web application, versioned API, PostgreSQL/Prisma data layer, shared packages, automated checks, and deployment-ready container definitions.
 
 ## Product vision
 
@@ -76,6 +76,15 @@ Milestone 2 adds:
 - identity, profile, role, token, session, address, and audit-event database models
 - security-focused identity tests and an expanded OpenAPI contract
 
+Milestone 3 adds:
+
+- searchable canonical cards across basketball, baseball, football, and Pokémon
+- extensible categories, manufacturers, sets, and grading-company data
+- raw and graded physical collection items with certification collision protection
+- private/public visibility, ownership-scoped editing, and cursor-ready pagination
+- a curated starter catalog that can later be replaced or expanded by an importer
+- mobile-first catalog search, card details, and personal collection screens
+
 ### Run locally
 
 1. Install Node.js 24 and enable the pinned pnpm version with Corepack.
@@ -86,4 +95,4 @@ Milestone 2 adds:
 
 Use `pnpm check` for the full local quality suite and `pnpm test:e2e` for browser smoke tests.
 
-Before staging, configure the email delivery provider and Google credentials listed in `.env.example`. The next product milestone is **Milestone 3: Catalog and collection**.
+Before staging, configure the email delivery provider and Google credentials listed in `.env.example`. The next product milestone is **Milestone 4: Image uploads**.

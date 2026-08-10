@@ -69,6 +69,77 @@ export const openApiDocument = {
       patch: operation("updateAddress", "Update an owned address", 200),
       delete: operation("deleteAddress", "Archive an owned address", 204),
     },
+    "/categories": {
+      get: operation("listCategories", "List active card categories", 200),
+    },
+    "/grading-companies": {
+      get: operation(
+        "listGradingCompanies",
+        "List active grading companies",
+        200,
+      ),
+    },
+    "/catalog/sets": {
+      get: operation("listCardSets", "List canonical card sets", 200),
+    },
+    "/catalog/cards": {
+      get: operation(
+        "searchCatalogCards",
+        "Search the canonical card catalog",
+        200,
+      ),
+      post: operation(
+        "submitCatalogCard",
+        "Submit a missing card for review",
+        201,
+      ),
+    },
+    "/catalog/cards/{cardId}": {
+      parameters: [
+        {
+          name: "cardId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      get: operation("getCatalogCard", "Read canonical card details", 200),
+    },
+    "/me/collection/items": {
+      get: operation(
+        "listMyCollection",
+        "List the current user’s collection",
+        200,
+      ),
+    },
+    "/collection/items": {
+      post: operation("createCollectionItem", "Add a physical card copy", 201),
+    },
+    "/collection/items/{itemId}": {
+      parameters: [
+        {
+          name: "itemId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      get: operation(
+        "getCollectionItem",
+        "Read an owned or public collection item",
+        200,
+      ),
+      patch: operation(
+        "updateCollectionItem",
+        "Update an owned collection item",
+        200,
+      ),
+      delete: operation(
+        "deleteCollectionItem",
+        "Archive an owned collection item",
+        204,
+      ),
+    },
   },
 } as const;
 
