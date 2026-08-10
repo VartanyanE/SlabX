@@ -4,6 +4,7 @@ import { Link, Navigate, useParams } from "react-router";
 import type { CollectionItem, Listing } from "@slabx/contracts";
 import { catalogApi } from "./api/catalog";
 import { listingApi } from "./api/listings";
+import { offerApi } from "./api/offers";
 
 const money = (minor: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
@@ -157,9 +158,51 @@ export function ListingDetailPage() {
           >
             {value.watched ? "Remove from watchlist" : "Watch this card"}
           </button>
+          {value.acceptsOffers && <MakeOffer listingId={value.id} />}
         </aside>
       </section>
     </main>
+  );
+}
+
+function MakeOffer({ listingId }: { listingId: string }) {
+  const offer = useMutation({
+    mutationFn: ({ amount, message }: { amount: number; message: string }) =>
+      offerApi.create(listingId, Math.round(amount * 100), message),
+  });
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    offer.mutate({
+      amount: Number(data.get("amount")),
+      message: String(data.get("message")),
+    });
+  }
+  if (offer.isSuccess)
+    return (
+      <p className="offer-success">
+        Offer sent. The seller has 24 hours to respond.{" "}
+        <Link to="/offers">View negotiation</Link>
+      </p>
+    );
+  return (
+    <form className="offer-form" onSubmit={submit}>
+      <h3>Make an offer</h3>
+      <label className="form-field">
+        <span>Offer amount (USD)</span>
+        <input name="amount" type="number" min="1" step="0.01" required />
+      </label>
+      <label className="form-field">
+        <span>Message (optional)</span>
+        <input name="message" maxLength={500} />
+      </label>
+      <p className="image-guidance">
+        Offers expire after 24 hours. You may cancel while the seller has not
+        responded.
+      </p>
+      {offer.error && <p className="form-error">{offer.error.message}</p>}
+      <button className="button button-secondary">Send offer</button>
+    </form>
   );
 }
 export function SellPage() {

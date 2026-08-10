@@ -18,6 +18,9 @@ import { MediaService } from "./media/service.js";
 import { ListingRepository } from "./listings/repository.js";
 import { createListingRouter } from "./listings/routes.js";
 import { ListingService } from "./listings/service.js";
+import { OfferRepository } from "./offers/repository.js";
+import { createOfferRouter } from "./offers/routes.js";
+import { OfferService } from "./offers/service.js";
 
 loadDotenv({ path: resolve(process.cwd(), "../../.env"), quiet: true });
 const environment = loadServerEnvironment(process.env);
@@ -76,6 +79,10 @@ const app = createApp({
   catalogRouter,
   listingRouter: createListingRouter({
     service: new ListingService(new ListingRepository(databasePool)),
+    identity: identityService,
+  }),
+  offerRouter: createOfferRouter({
+    service: new OfferService(new OfferRepository(databasePool)),
     identity: identityService,
   }),
 });

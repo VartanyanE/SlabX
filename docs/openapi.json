@@ -631,6 +631,149 @@
           }
         }
       }
+    },
+    "/listings/{listingId}/offers": {
+      "parameters": [
+        {
+          "name": "listingId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "createOffer",
+        "summary": "Create a buyer offer",
+        "responses": {
+          "201": {
+            "description": "Create a buyer offer"
+          }
+        }
+      }
+    },
+    "/me/offers": {
+      "get": {
+        "operationId": "listMyOffers",
+        "summary": "List buyer and seller negotiations",
+        "responses": {
+          "200": {
+            "description": "List buyer and seller negotiations"
+          }
+        }
+      }
+    },
+    "/offers/{threadId}": {
+      "parameters": [
+        {
+          "name": "threadId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getOfferThread",
+        "summary": "Read an immutable negotiation timeline",
+        "responses": {
+          "200": {
+            "description": "Read an immutable negotiation timeline"
+          }
+        }
+      }
+    },
+    "/offers/{threadId}/counter": {
+      "parameters": [
+        {
+          "name": "threadId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "counterOffer",
+        "summary": "Counter the current offer revision",
+        "responses": {
+          "201": {
+            "description": "Counter the current offer revision"
+          }
+        }
+      }
+    },
+    "/offers/{threadId}/accept": {
+      "parameters": [
+        {
+          "name": "threadId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "acceptOffer",
+        "summary": "Accept and reserve the listing for checkout",
+        "responses": {
+          "204": {
+            "description": "Accept and reserve the listing for checkout"
+          }
+        }
+      }
+    },
+    "/offers/{threadId}/decline": {
+      "parameters": [
+        {
+          "name": "threadId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "declineOffer",
+        "summary": "Decline the current offer revision",
+        "responses": {
+          "204": {
+            "description": "Decline the current offer revision"
+          }
+        }
+      }
+    },
+    "/offers/{threadId}/cancel": {
+      "parameters": [
+        {
+          "name": "threadId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "cancelOffer",
+        "summary": "Cancel a pending buyer offer",
+        "responses": {
+          "204": {
+            "description": "Cancel a pending buyer offer"
+          }
+        }
+      }
     }
   }
 }

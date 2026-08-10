@@ -259,6 +259,47 @@ export type Listing = {
   item: CollectionItem;
 };
 
+export const offerCreateSchema = z.object({
+  amountMinor: z.number().int().min(100).max(100_000_000),
+  message: z.string().trim().max(500).nullable().optional(),
+  idempotencyKey: z.string().uuid(),
+});
+export const offerCounterSchema = offerCreateSchema.extend({
+  version: z.number().int().positive(),
+});
+export const offerActionSchema = z.object({
+  version: z.number().int().positive(),
+});
+export type OfferCreate = z.infer<typeof offerCreateSchema>;
+export type OfferCounter = z.infer<typeof offerCounterSchema>;
+export type OfferAction = z.infer<typeof offerActionSchema>;
+export type OfferRevision = {
+  id: string;
+  actorUserId: string;
+  kind: "OFFER" | "COUNTER";
+  amountMinor: number;
+  message: string | null;
+  expiresAt: string;
+  createdAt: string;
+};
+export type OfferThread = {
+  id: string;
+  listingId: string;
+  buyerUserId: string;
+  sellerUserId: string;
+  status: "OPEN" | "ACCEPTED" | "DECLINED" | "CANCELLED" | "EXPIRED";
+  acceptedPriceMinor: number | null;
+  checkoutExpiresAt: string | null;
+  version: number;
+  listing: {
+    id: string;
+    playerOrCharacter: string;
+    priceMinor: number;
+    status: string;
+  };
+  revisions: OfferRevision[];
+};
+
 export type CatalogCard = {
   id: string;
   categoryId: string;

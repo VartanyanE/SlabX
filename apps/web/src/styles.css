@@ -587,6 +587,92 @@ details summary {
   background: transparent;
   color: var(--cream);
 }
+.offer-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.offer-form h3 {
+  margin: 0;
+}
+.offer-list {
+  display: grid;
+  gap: 1rem;
+}
+.offer-panel {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.offer-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.offer-heading span {
+  color: var(--lime);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.offer-heading h2 {
+  margin: 0.35rem 0;
+  font-size: 1.6rem;
+}
+.offer-timeline {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  list-style: none;
+}
+.offer-timeline li {
+  position: relative;
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem 0 1rem 1.25rem;
+  border-left: 2px solid var(--line);
+}
+.offer-timeline li::before {
+  content: "";
+  position: absolute;
+  left: -0.4rem;
+  top: 1.25rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: var(--lime);
+}
+.offer-timeline span,
+.offer-timeline small {
+  color: #94a49b;
+}
+.offer-timeline p {
+  margin: 0.25rem 0;
+}
+.offer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+.offer-actions form {
+  display: grid;
+  width: 100%;
+  gap: 0.5rem;
+}
+.offer-actions input {
+  min-height: 2.75rem;
+  padding: 0.65rem;
+  color: var(--cream);
+  background: #0b1b15;
+  border: 1px solid var(--line);
+}
+.offer-success {
+  padding: 0.8rem;
+  color: var(--ink);
+  background: var(--lime);
+}
 .missing-card {
   margin-top: 2rem;
   padding: 1rem;
