@@ -2,7 +2,7 @@
 
 SlabX is a planned mobile-first marketplace for buying, selling, offering on, collecting, and eventually trading collectible cards.
 
-This repository includes **Milestone 1: Platform Foundation**, **Milestone 2: Authentication and Profiles**, and the **Milestone 3 catalog and collection implementation**. The platform has a mobile-first web application, versioned API, PostgreSQL/Prisma data layer, shared packages, automated checks, and deployment-ready container definitions.
+This repository includes **Milestone 1: Platform Foundation**, **Milestone 2: Authentication and Profiles**, **Milestone 3: Catalog and Collection**, and **Milestone 4: Image Uploads**. The platform has a mobile-first web application, versioned API, PostgreSQL/Prisma data layer, shared packages, automated checks, and deployment-ready container definitions.
 
 ## Product vision
 
@@ -85,6 +85,13 @@ Milestone 3 adds:
 - a curated starter catalog that can later be replaced or expanded by an importer
 - mobile-first catalog search, card details, and personal collection screens
 
+Milestone 4 adds:
+
+- secure, ownership-scoped Cloudinary upload signatures without exposing provider secrets
+- direct browser uploads with progress, retry guidance, format validation, and a 12 MB limit
+- ordered collection images with a primary image, removal, and responsive previews
+- provider confirmation, moderation state, and protection against cross-user attachment
+
 ### Run locally
 
 1. Install Node.js 24 and enable the pinned pnpm version with Corepack.
@@ -95,4 +102,4 @@ Milestone 3 adds:
 
 Use `pnpm check` for the full local quality suite and `pnpm test:e2e` for browser smoke tests.
 
-Before staging, configure the email delivery provider and Google credentials listed in `.env.example`. The next product milestone is **Milestone 4: Image uploads**.
+Before staging, configure the email delivery provider, Google, and Cloudinary credentials listed in `.env.example`. The next product milestone is **Milestone 5: Listings and discovery**.

@@ -355,6 +355,103 @@
           }
         }
       }
+    },
+    "/collection/items/{itemId}/media/sign": {
+      "parameters": [
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "signCollectionImageUpload",
+        "summary": "Create an ownership-scoped image upload signature",
+        "responses": {
+          "200": {
+            "description": "Create an ownership-scoped image upload signature"
+          }
+        }
+      }
+    },
+    "/collection/items/{itemId}/media/confirm": {
+      "parameters": [
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "confirmCollectionImageUpload",
+        "summary": "Verify and attach an uploaded collection image",
+        "responses": {
+          "201": {
+            "description": "Verify and attach an uploaded collection image"
+          }
+        }
+      }
+    },
+    "/collection/items/{itemId}/media/order": {
+      "parameters": [
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "reorderCollectionImages",
+        "summary": "Reorder images and select the first as primary",
+        "responses": {
+          "200": {
+            "description": "Reorder images and select the first as primary"
+          }
+        }
+      }
+    },
+    "/collection/items/{itemId}/media/{mediaId}": {
+      "parameters": [
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "name": "mediaId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "delete": {
+        "operationId": "deleteCollectionImage",
+        "summary": "Remove an owned collection image",
+        "responses": {
+          "204": {
+            "description": "Remove an owned collection image"
+          }
+        }
+      }
     }
   }
 }

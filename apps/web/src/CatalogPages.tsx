@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useState } from "react";
+import type { CollectionItem } from "@slabx/contracts";
 import { Link, Navigate, useParams } from "react-router";
-import { catalogApi } from "./api/catalog";
+import { catalogApi, uploadToCloudinary } from "./api/catalog";
 
 export function CatalogPage() {
   const [search, setSearch] = useState("");
@@ -361,6 +362,7 @@ export function CollectionPage() {
                 ? `${item.gradingCompany?.code} ${item.grade}`
                 : item.rawCondition?.replaceAll("_", " ")}
             </strong>
+            <ImageManager item={item} />
             <button
               className="text-link"
               onClick={() => remove.mutate(item.id)}
@@ -376,5 +378,119 @@ export function CollectionPage() {
         </p>
       )}
     </main>
+  );
+}
+
+function ImageManager({ item }: { item: CollectionItem }) {
+  const client = useQueryClient();
+  const [progress, setProgress] = useState<number | null>(null);
+  const [error, setError] = useState("");
+  const busy = progress !== null;
+  const media = item.media ?? [];
+  async function choose(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    setError("");
+    try {
+      for (const file of files) {
+        const signed = await catalogApi.signUpload(item.id);
+        if (file.size > signed.maxBytes)
+          throw new Error("Each image must be under 12 MB.");
+        const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+        if (!signed.allowedFormats.includes(extension))
+          throw new Error("Choose a JPG, PNG, WebP, or HEIC image.");
+        setProgress(0);
+        const uploaded = await uploadToCloudinary(signed, file, setProgress);
+        await catalogApi.confirmUpload(item.id, uploaded.public_id);
+      }
+      await client.invalidateQueries({ queryKey: ["collection"] });
+    } catch (value) {
+      setError(
+        value instanceof Error
+          ? value.message
+          : "Image upload failed. Please retry.",
+      );
+    } finally {
+      setProgress(null);
+    }
+  }
+  async function move(index: number, direction: -1 | 1) {
+    const next = [...media];
+    const target = index + direction;
+    if (!next[target]) return;
+    [next[index], next[target]] = [next[target]!, next[index]!];
+    await catalogApi.reorderMedia(
+      item.id,
+      next.map((image) => image.id),
+    );
+    await client.invalidateQueries({ queryKey: ["collection"] });
+  }
+  async function remove(mediaId: string) {
+    await catalogApi.deleteMedia(item.id, mediaId);
+    await client.invalidateQueries({ queryKey: ["collection"] });
+  }
+  return (
+    <section
+      className="image-manager"
+      aria-label={`Images for ${item.catalogCard.playerOrCharacter}`}
+    >
+      <div className="item-images">
+        {media.map((image, index) => (
+          <figure key={image.id} className="item-image">
+            <img
+              src={image.secureUrl.replace(
+                "/upload/",
+                "/upload/f_auto,q_auto,c_fill,w_640,h_800/",
+              )}
+              alt={`${item.catalogCard.playerOrCharacter} collectible ${index + 1}`}
+            />
+            {image.isPrimary && <figcaption>Primary</figcaption>}
+            <div className="image-actions">
+              <button
+                type="button"
+                aria-label="Move image left"
+                disabled={index === 0}
+                onClick={() => void move(index, -1)}
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                aria-label="Move image right"
+                disabled={index === media.length - 1}
+                onClick={() => void move(index, 1)}
+              >
+                →
+              </button>
+              <button type="button" onClick={() => void remove(image.id)}>
+                Delete
+              </button>
+            </div>
+          </figure>
+        ))}
+      </div>
+      <label className="image-picker button button-secondary">
+        {busy
+          ? `Uploading ${progress}%`
+          : media.length
+            ? "Add more photos"
+            : "Add photos"}
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/heic"
+          multiple
+          disabled={busy || media.length >= 12}
+          onChange={(event) => void choose(event)}
+        />
+      </label>
+      <p className="image-guidance">
+        Front first, then back and details. Use bright, even light.
+      </p>
+      {error && (
+        <p className="form-error" role="alert">
+          {error} <span>Choose the file again to retry.</span>
+        </p>
+      )}
+    </section>
   );
 }

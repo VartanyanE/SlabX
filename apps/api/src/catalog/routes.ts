@@ -6,14 +6,18 @@ import {
   catalogQuerySchema,
   collectionItemInputSchema,
   collectionQuerySchema,
+  mediaConfirmationSchema,
+  mediaReorderSchema,
 } from "@slabx/contracts";
 import { IdentityService } from "../identity/service.js";
+import { MediaService } from "../media/service.js";
 import { CatalogError, CatalogService } from "./service.js";
 
 const SESSION_COOKIE = "slabx_session";
 export function createCatalogRouter(options: {
   service: CatalogService;
   identity: IdentityService;
+  media?: MediaService;
 }): Router {
   const router = Router();
   router.use(cookieParser());
@@ -175,6 +179,111 @@ export function createCatalogRouter(options: {
           "NOT_FOUND",
           "Collection item not found or locked.",
         );
+      res.status(204).end();
+    },
+  );
+  router.post(
+    "/collection/items/:itemId/media/sign",
+    requireAuth,
+    requireCsrf,
+    async (req, res) => {
+      if (!options.media)
+        return error(
+          res,
+          503,
+          "MEDIA_UNAVAILABLE",
+          "Image uploads are not configured.",
+        );
+      try {
+        const data = await options.media.sign(
+          res.locals.user.id,
+          String(req.params.itemId),
+        );
+        res.json({ data, meta: { requestId: req.id } });
+      } catch (e) {
+        handle(e, res);
+      }
+    },
+  );
+  router.post(
+    "/collection/items/:itemId/media/confirm",
+    requireAuth,
+    requireCsrf,
+    async (req, res) => {
+      if (!options.media)
+        return error(
+          res,
+          503,
+          "MEDIA_UNAVAILABLE",
+          "Image uploads are not configured.",
+        );
+      try {
+        const input = parse(mediaConfirmationSchema, req.body);
+        await options.media.confirm(
+          res.locals.user.id,
+          String(req.params.itemId),
+          input.publicId,
+        );
+        const item = await options.service.getItem(
+          String(req.params.itemId),
+          res.locals.user.id,
+        );
+        res.status(201).json({ data: item, meta: { requestId: req.id } });
+      } catch (e) {
+        handle(e, res);
+      }
+    },
+  );
+  router.put(
+    "/collection/items/:itemId/media/order",
+    requireAuth,
+    requireCsrf,
+    async (req, res) => {
+      if (!options.media)
+        return error(
+          res,
+          503,
+          "MEDIA_UNAVAILABLE",
+          "Image uploads are not configured.",
+        );
+      try {
+        const input = parse(mediaReorderSchema, req.body);
+        const updated = await options.media.reorder(
+          res.locals.user.id,
+          String(req.params.itemId),
+          input.mediaIds,
+        );
+        if (!updated)
+          return error(res, 404, "NOT_FOUND", "Collection images not found.");
+        const item = await options.service.getItem(
+          String(req.params.itemId),
+          res.locals.user.id,
+        );
+        res.json({ data: item, meta: { requestId: req.id } });
+      } catch (e) {
+        handle(e, res);
+      }
+    },
+  );
+  router.delete(
+    "/collection/items/:itemId/media/:mediaId",
+    requireAuth,
+    requireCsrf,
+    async (req, res) => {
+      if (!options.media)
+        return error(
+          res,
+          503,
+          "MEDIA_UNAVAILABLE",
+          "Image uploads are not configured.",
+        );
+      const removed = await options.media.remove(
+        res.locals.user.id,
+        String(req.params.itemId),
+        String(req.params.mediaId),
+      );
+      if (!removed)
+        return error(res, 404, "NOT_FOUND", "Collection image not found.");
       res.status(204).end();
     },
   );

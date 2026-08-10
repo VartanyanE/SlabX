@@ -12,6 +12,9 @@ import { GoogleOidc } from "./identity/google.js";
 import { PostgresIdentityRepository } from "./identity/postgres-repository.js";
 import { createIdentityRouter } from "./identity/routes.js";
 import { IdentityService } from "./identity/service.js";
+import { CloudinaryProvider } from "./media/cloudinary.js";
+import { MediaRepository } from "./media/repository.js";
+import { MediaService } from "./media/service.js";
 
 loadDotenv({ path: resolve(process.cwd(), "../../.env"), quiet: true });
 const environment = loadServerEnvironment(process.env);
@@ -47,6 +50,20 @@ const identityRouter = createIdentityRouter({
 const catalogRouter = createCatalogRouter({
   service: new CatalogService(new CatalogRepository(databasePool)),
   identity: identityService,
+  ...(environment.CLOUDINARY_CLOUD_NAME &&
+  environment.CLOUDINARY_API_KEY &&
+  environment.CLOUDINARY_API_SECRET
+    ? {
+        media: new MediaService(
+          new MediaRepository(databasePool),
+          new CloudinaryProvider(
+            environment.CLOUDINARY_CLOUD_NAME,
+            environment.CLOUDINARY_API_KEY,
+            environment.CLOUDINARY_API_SECRET,
+          ),
+        ),
+      }
+    : {}),
 });
 const app = createApp({
   databaseHealthCheck: createDatabaseHealthCheck(environment.DATABASE_URL),

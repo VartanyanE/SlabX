@@ -140,8 +140,57 @@ export const openApiDocument = {
         204,
       ),
     },
+    "/collection/items/{itemId}/media/sign": {
+      parameters: [itemIdParameter()],
+      post: operation(
+        "signCollectionImageUpload",
+        "Create an ownership-scoped image upload signature",
+        200,
+      ),
+    },
+    "/collection/items/{itemId}/media/confirm": {
+      parameters: [itemIdParameter()],
+      post: operation(
+        "confirmCollectionImageUpload",
+        "Verify and attach an uploaded collection image",
+        201,
+      ),
+    },
+    "/collection/items/{itemId}/media/order": {
+      parameters: [itemIdParameter()],
+      put: operation(
+        "reorderCollectionImages",
+        "Reorder images and select the first as primary",
+        200,
+      ),
+    },
+    "/collection/items/{itemId}/media/{mediaId}": {
+      parameters: [
+        itemIdParameter(),
+        {
+          name: "mediaId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      delete: operation(
+        "deleteCollectionImage",
+        "Remove an owned collection image",
+        204,
+      ),
+    },
   },
 } as const;
+
+function itemIdParameter() {
+  return {
+    name: "itemId",
+    in: "path",
+    required: true,
+    schema: { type: "string", format: "uuid" },
+  } as const;
+}
 
 function operation(operationId: string, summary: string, status: number) {
   return {

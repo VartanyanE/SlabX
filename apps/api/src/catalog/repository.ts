@@ -160,6 +160,8 @@ export class CatalogRepository {
        CASE WHEN g.id IS NULL THEN NULL ELSE json_build_object('id',g.id,'code',g.code,'name',g.name) END AS "gradingCompany",
        i.grade::float AS grade,i.certification_number AS "certificationNumber",i.item_notes AS "itemNotes",i.visibility,
        i.availability_status AS "availabilityStatus",i.acquired_at::text AS "acquiredAt",i.acquisition_price_minor AS "acquisitionPriceMinor",i.version
+       ,COALESCE((SELECT json_agg(json_build_object('id',a.id,'publicId',a.public_id,'secureUrl',a.secure_url,'width',a.width,'height',a.height,'format',a.format,'bytes',a.bytes,'position',im.position,'isPrimary',im.is_primary,'moderationStatus',a.moderation_status) ORDER BY im.position)
+         FROM item_media im JOIN media_assets a ON a.id=im.media_asset_id WHERE im.collection_item_id=i.id AND a.deleted_at IS NULL),'[]'::json) AS media
        FROM collection_items i JOIN catalog_cards c ON c.id=i.catalog_card_id JOIN categories cat ON cat.id=c.category_id
        JOIN card_sets s ON s.id=c.card_set_id JOIN manufacturers m ON m.id=s.manufacturer_id
        LEFT JOIN grading_companies g ON g.id=i.grading_company_id

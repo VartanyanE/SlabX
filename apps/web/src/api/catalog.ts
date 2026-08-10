@@ -3,6 +3,7 @@ import type {
   CatalogCardInput,
   CollectionItem,
   CollectionItemInput,
+  SignedUpload,
 } from "@slabx/contracts";
 
 type Envelope<T> = { data: T; error?: { message?: string } };
@@ -61,4 +62,55 @@ export const catalogApi = {
     }),
   deleteItem: (id: string) =>
     api<void>(`/collection/items/${id}`, { method: "DELETE" }),
+  signUpload: (itemId: string) =>
+    api<SignedUpload>(`/collection/items/${itemId}/media/sign`, {
+      method: "POST",
+    }),
+  confirmUpload: (itemId: string, publicId: string) =>
+    api<CollectionItem>(`/collection/items/${itemId}/media/confirm`, {
+      method: "POST",
+      body: JSON.stringify({ publicId }),
+    }),
+  reorderMedia: (itemId: string, mediaIds: string[]) =>
+    api<CollectionItem>(`/collection/items/${itemId}/media/order`, {
+      method: "PUT",
+      body: JSON.stringify({ mediaIds }),
+    }),
+  deleteMedia: (itemId: string, mediaId: string) =>
+    api<void>(`/collection/items/${itemId}/media/${mediaId}`, {
+      method: "DELETE",
+    }),
 };
+
+export function uploadToCloudinary(
+  signed: SignedUpload,
+  file: File,
+  onProgress: (value: number) => void,
+): Promise<{ public_id: string }> {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open(
+      "POST",
+      `https://api.cloudinary.com/v1_1/${signed.cloudName}/image/upload`,
+    );
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable)
+        onProgress(Math.round((event.loaded / event.total) * 100));
+    };
+    request.onerror = () =>
+      reject(new Error("Upload interrupted. Check your connection and retry."));
+    request.onload = () => {
+      if (request.status < 200 || request.status >= 300)
+        return reject(new Error("Cloudinary rejected this image."));
+      resolve(JSON.parse(request.responseText) as { public_id: string });
+    };
+    const body = new FormData();
+    body.append("file", file);
+    body.append("api_key", signed.apiKey);
+    body.append("timestamp", String(signed.timestamp));
+    body.append("folder", signed.folder);
+    body.append("public_id", signed.publicId);
+    body.append("signature", signed.signature);
+    request.send(body);
+  });
+}
