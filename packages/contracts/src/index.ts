@@ -185,6 +185,80 @@ export type SignedUpload = {
   allowedFormats: string[];
 };
 
+const listingFields = {
+  collectionItemId: z.uuid(),
+  priceMinor: z.number().int().min(100).max(100_000_000),
+  currency: z.literal("USD").default("USD"),
+  acceptsOffers: z.boolean().default(false),
+  minimumOfferMinor: z.number().int().positive().nullable().optional(),
+  conditionDisclosure: z.string().trim().min(10).max(2000),
+};
+export const listingInputSchema = z
+  .object(listingFields)
+  .refine(
+    (value) =>
+      !value.minimumOfferMinor || value.minimumOfferMinor <= value.priceMinor,
+    {
+      message: "Minimum offer cannot exceed the listing price.",
+    },
+  );
+export const listingUpdateSchema = z
+  .object({
+    priceMinor: listingFields.priceMinor,
+    currency: listingFields.currency,
+    acceptsOffers: listingFields.acceptsOffers,
+    minimumOfferMinor: listingFields.minimumOfferMinor,
+    conditionDisclosure: listingFields.conditionDisclosure,
+    version: z.number().int().positive(),
+  })
+  .refine(
+    (value) =>
+      !value.minimumOfferMinor || value.minimumOfferMinor <= value.priceMinor,
+    {
+      message: "Minimum offer cannot exceed the listing price.",
+    },
+  );
+export const listingQuerySchema = z.object({
+  q: z.string().trim().max(100).optional(),
+  category: z.string().trim().max(40).optional(),
+  priceMin: z.coerce.number().int().nonnegative().optional(),
+  priceMax: z.coerce.number().int().positive().optional(),
+  graded: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    .optional(),
+  acceptsOffers: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    .optional(),
+  sort: z.enum(["newest", "price_asc", "price_desc"]).default("newest"),
+  cursor: z.uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+export type ListingInput = z.infer<typeof listingInputSchema>;
+export type ListingUpdate = z.infer<typeof listingUpdateSchema>;
+export type ListingQuery = z.infer<typeof listingQuerySchema>;
+export type Listing = {
+  id: string;
+  status: "DRAFT" | "ACTIVE" | "PAUSED" | "RESERVED" | "CLOSED";
+  priceMinor: number;
+  currency: "USD";
+  acceptsOffers: boolean;
+  minimumOfferMinor: number | null;
+  conditionDisclosure: string;
+  publishedAt: string | null;
+  version: number;
+  watched: boolean;
+  seller: {
+    id: string;
+    handle: string;
+    displayName: string;
+    ratingAverage: number | null;
+    ratingCount: number;
+  };
+  item: CollectionItem;
+};
+
 export type CatalogCard = {
   id: string;
   categoryId: string;

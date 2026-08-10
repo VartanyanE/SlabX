@@ -15,6 +15,9 @@ import { IdentityService } from "./identity/service.js";
 import { CloudinaryProvider } from "./media/cloudinary.js";
 import { MediaRepository } from "./media/repository.js";
 import { MediaService } from "./media/service.js";
+import { ListingRepository } from "./listings/repository.js";
+import { createListingRouter } from "./listings/routes.js";
+import { ListingService } from "./listings/service.js";
 
 loadDotenv({ path: resolve(process.cwd(), "../../.env"), quiet: true });
 const environment = loadServerEnvironment(process.env);
@@ -71,6 +74,10 @@ const app = createApp({
   webOrigin: environment.WEB_ORIGIN,
   identityRouter,
   catalogRouter,
+  listingRouter: createListingRouter({
+    service: new ListingService(new ListingRepository(databasePool)),
+    identity: identityService,
+  }),
 });
 
 const server = app.listen(environment.API_PORT, () => {

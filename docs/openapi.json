@@ -452,6 +452,185 @@
           }
         }
       }
+    },
+    "/listings": {
+      "get": {
+        "operationId": "searchListings",
+        "summary": "Search active marketplace listings",
+        "responses": {
+          "200": {
+            "description": "Search active marketplace listings"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createListing",
+        "summary": "Create a listing draft for an owned item",
+        "responses": {
+          "201": {
+            "description": "Create a listing draft for an owned item"
+          }
+        }
+      }
+    },
+    "/listings/{listingId}": {
+      "parameters": [
+        {
+          "name": "listingId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getListing",
+        "summary": "Read public listing details",
+        "responses": {
+          "200": {
+            "description": "Read public listing details"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateListing",
+        "summary": "Update a draft or paused owned listing",
+        "responses": {
+          "200": {
+            "description": "Update a draft or paused owned listing"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "closeListing",
+        "summary": "Close an owned listing",
+        "responses": {
+          "204": {
+            "description": "Close an owned listing"
+          }
+        }
+      }
+    },
+    "/listings/{listingId}/publish": {
+      "parameters": [
+        {
+          "name": "listingId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "publishListing",
+        "summary": "Publish an owned listing",
+        "responses": {
+          "204": {
+            "description": "Publish an owned listing"
+          }
+        }
+      }
+    },
+    "/listings/{listingId}/pause": {
+      "parameters": [
+        {
+          "name": "listingId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "pauseListing",
+        "summary": "Pause an active owned listing",
+        "responses": {
+          "204": {
+            "description": "Pause an active owned listing"
+          }
+        }
+      }
+    },
+    "/listings/{listingId}/resume": {
+      "parameters": [
+        {
+          "name": "listingId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "resumeListing",
+        "summary": "Resume a paused owned listing",
+        "responses": {
+          "204": {
+            "description": "Resume a paused owned listing"
+          }
+        }
+      }
+    },
+    "/me/listings": {
+      "get": {
+        "operationId": "listMyListings",
+        "summary": "List the current seller's listings",
+        "responses": {
+          "200": {
+            "description": "List the current seller's listings"
+          }
+        }
+      }
+    },
+    "/me/watchlist": {
+      "get": {
+        "operationId": "listMyWatchlist",
+        "summary": "List the current buyer's watched listings",
+        "responses": {
+          "200": {
+            "description": "List the current buyer's watched listings"
+          }
+        }
+      }
+    },
+    "/me/watchlist/{listingId}": {
+      "parameters": [
+        {
+          "name": "listingId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "watchListing",
+        "summary": "Watch an active listing",
+        "responses": {
+          "204": {
+            "description": "Watch an active listing"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unwatchListing",
+        "summary": "Remove a watched listing",
+        "responses": {
+          "204": {
+            "description": "Remove a watched listing"
+          }
+        }
+      }
     }
   }
 }

@@ -10,6 +10,13 @@ import {
   VerifyEmailPage,
 } from "./AuthPages";
 import { CatalogCardPage, CatalogPage, CollectionPage } from "./CatalogPages";
+import {
+  ListingDetailPage,
+  MarketplacePage,
+  SellPage,
+  SellingPage,
+  WatchlistPage,
+} from "./ListingsPages";
 
 function Home() {
   const health = useQuery({
@@ -109,7 +116,8 @@ export function App() {
           <span>SLABX</span>
         </NavLink>
         <nav aria-label="Primary">
-          <NavLink to="/catalog">Catalog</NavLink>
+          <NavLink to="/marketplace">Marketplace</NavLink>
+          <NavLink to="/sell">Sell</NavLink>
           <NavLink to="/collection">Collection</NavLink>
           <NavLink to="/login">Sign in</NavLink>
         </nav>
@@ -125,6 +133,11 @@ export function App() {
         <Route path="/catalog" element={<CatalogPage />} />
         <Route path="/catalog/:cardId" element={<CatalogCardPage />} />
         <Route path="/collection" element={<CollectionPage />} />
+        <Route path="/marketplace" element={<MarketplacePage />} />
+        <Route path="/marketplace/:listingId" element={<ListingDetailPage />} />
+        <Route path="/sell" element={<SellPage />} />
+        <Route path="/selling" element={<SellingPage />} />
+        <Route path="/watchlist" element={<WatchlistPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <footer>
