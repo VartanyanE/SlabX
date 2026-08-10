@@ -112,9 +112,7 @@ function fail(
   code: string,
   message: string,
 ) {
-  return response
-    .status(status)
-    .json({
-      error: { code, message, requestId: String(response.req.id ?? "") },
-    });
+  return response.status(status).json({
+    error: { code, message, requestId: String(response.req.id ?? "") },
+  });
 }
