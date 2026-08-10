@@ -330,6 +330,101 @@ details summary {
   align-items: center;
   color: #aebbb4;
 }
+.catalog-page {
+  width: min(100%, 78rem);
+  margin: 0 auto;
+  padding: 3.5rem 1.25rem 6rem;
+}
+.catalog-heading {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+.catalog-heading h1,
+.card-detail h1 {
+  margin: 0;
+  max-width: 16ch;
+  font-size: clamp(2.4rem, 10vw, 5.5rem);
+  line-height: 0.96;
+}
+.catalog-controls {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.catalog-controls select,
+.form-field select {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.7rem;
+  color: var(--cream);
+  background: #0d1410;
+  border: 1px solid var(--line);
+}
+.card-grid {
+  display: grid;
+  gap: 1rem;
+}
+.catalog-card {
+  position: relative;
+  display: grid;
+  gap: 0.55rem;
+  min-height: 14rem;
+  padding: 1.25rem;
+  color: #aebbb4;
+  text-decoration: none;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.catalog-card:hover {
+  border-color: var(--lime);
+}
+.catalog-card span,
+.catalog-card em {
+  color: var(--lime);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.catalog-card h2,
+.catalog-card p {
+  margin: 0;
+}
+.catalog-card h2 {
+  color: var(--cream);
+  font-size: 1.5rem;
+}
+.catalog-card strong {
+  align-self: end;
+  color: var(--cream);
+}
+.catalog-card .text-link {
+  width: max-content;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.card-detail {
+  display: grid;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.empty-state {
+  padding: 3rem 1rem;
+  text-align: center;
+  border: 1px dashed var(--line);
+}
+.missing-card {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
 footer {
   border-top: 1px solid var(--line);
   border-bottom: 0;
@@ -380,6 +475,19 @@ footer {
   }
   .address-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .catalog-page {
+    padding: 6rem 2.5rem;
+  }
+  .catalog-controls {
+    grid-template-columns: 2fr 1fr;
+  }
+  .card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .card-detail {
+    grid-template-columns: 1fr minmax(22rem, 0.7fr);
+    align-items: start;
   }
 }
 

@@ -89,3 +89,98 @@ export type AuthenticatedUser = {
   roles: string[];
   profile: { handle: string; displayName: string; bio: string | null };
 };
+
+export const catalogQuerySchema = z.object({
+  q: z.string().trim().max(100).optional(),
+  category: z.string().trim().max(40).optional(),
+  year: z.coerce.number().int().min(1880).max(2100).optional(),
+  cursor: z.uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export const catalogCardInputSchema = z.object({
+  categoryId: z.uuid(),
+  cardSetId: z.uuid(),
+  playerOrCharacter: z.string().trim().min(1).max(120),
+  year: z.number().int().min(1880).max(2100),
+  cardNumber: z.string().trim().min(1).max(40),
+  subset: z.string().trim().max(100).nullable().optional(),
+  variant: z.string().trim().max(100).nullable().optional(),
+  isRookie: z.boolean().default(false),
+});
+
+const collectionBaseSchema = z.object({
+  catalogCardId: z.uuid(),
+  itemNotes: z.string().trim().max(1000).nullable().optional(),
+  visibility: z.enum(["PRIVATE", "PUBLIC"]).default("PRIVATE"),
+  availabilityStatus: z
+    .enum(["AVAILABLE", "NOT_FOR_SALE"])
+    .default("NOT_FOR_SALE"),
+  acquiredAt: z.iso.date().nullable().optional(),
+  acquisitionPriceMinor: z.number().int().nonnegative().nullable().optional(),
+});
+export const collectionItemInputSchema = z.discriminatedUnion("conditionType", [
+  collectionBaseSchema.extend({
+    conditionType: z.literal("RAW"),
+    rawCondition: z.enum([
+      "POOR",
+      "FAIR",
+      "GOOD",
+      "VERY_GOOD",
+      "EXCELLENT",
+      "NEAR_MINT",
+      "MINT",
+    ]),
+  }),
+  collectionBaseSchema.extend({
+    conditionType: z.literal("GRADED"),
+    gradingCompanyId: z.uuid(),
+    grade: z.number().min(1).max(10),
+    certificationNumber: z.string().trim().min(2).max(80),
+  }),
+]);
+export const collectionQuerySchema = z.object({
+  q: z.string().trim().max(100).optional(),
+  conditionType: z.enum(["RAW", "GRADED"]).optional(),
+  visibility: z.enum(["PRIVATE", "PUBLIC"]).optional(),
+  cursor: z.uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export type CatalogQuery = z.infer<typeof catalogQuerySchema>;
+export type CatalogCardInput = z.infer<typeof catalogCardInputSchema>;
+export type CollectionItemInput = z.infer<typeof collectionItemInputSchema>;
+export type CollectionQuery = z.infer<typeof collectionQuerySchema>;
+
+export type CatalogCard = {
+  id: string;
+  categoryId: string;
+  categorySlug: string;
+  categoryName: string;
+  cardSetId: string;
+  setName: string;
+  manufacturer: string;
+  playerOrCharacter: string;
+  year: number;
+  cardNumber: string;
+  subset: string | null;
+  variant: string | null;
+  isRookie: boolean;
+  status: "PENDING_REVIEW" | "ACTIVE";
+};
+
+export type CollectionItem = {
+  id: string;
+  catalogCard: CatalogCard;
+  conditionType: "RAW" | "GRADED";
+  rawCondition: string | null;
+  gradingCompany: { id: string; code: string; name: string } | null;
+  grade: number | null;
+  certificationNumber: string | null;
+  itemNotes: string | null;
+  visibility: "PRIVATE" | "PUBLIC";
+  availabilityStatus: string;
+  acquiredAt: string | null;
+  acquisitionPriceMinor: number | null;
+  version: number;
+};

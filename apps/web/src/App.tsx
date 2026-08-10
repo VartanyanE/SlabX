@@ -9,6 +9,7 @@ import {
   ResetPasswordPage,
   VerifyEmailPage,
 } from "./AuthPages";
+import { CatalogCardPage, CatalogPage, CollectionPage } from "./CatalogPages";
 
 function Home() {
   const health = useQuery({
@@ -108,6 +109,8 @@ export function App() {
           <span>SLABX</span>
         </NavLink>
         <nav aria-label="Primary">
+          <NavLink to="/catalog">Catalog</NavLink>
+          <NavLink to="/collection">Collection</NavLink>
           <NavLink to="/login">Sign in</NavLink>
         </nav>
       </header>
@@ -119,6 +122,9 @@ export function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/account" element={<AccountPage />} />
+        <Route path="/catalog" element={<CatalogPage />} />
+        <Route path="/catalog/:cardId" element={<CatalogCardPage />} />
+        <Route path="/collection" element={<CollectionPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <footer>

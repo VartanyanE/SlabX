@@ -31,6 +31,42 @@ enum SellerStatus {
   RESTRICTED
 }
 
+enum CatalogCardStatus {
+  PENDING_REVIEW
+  ACTIVE
+  MERGED
+  REJECTED
+}
+
+enum CollectionConditionType {
+  RAW
+  GRADED
+}
+
+enum RawCondition {
+  POOR
+  FAIR
+  GOOD
+  VERY_GOOD
+  EXCELLENT
+  NEAR_MINT
+  MINT
+}
+
+enum CollectionVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum CollectionAvailability {
+  AVAILABLE
+  NOT_FOR_SALE
+  LISTED
+  RESERVED
+  SOLD
+  TRADE_LOCKED
+}
+
 model User {
   id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   emailNormalized String     @unique(map: "users_email_normalized_key") @map("email_normalized")
@@ -50,6 +86,8 @@ model User {
   addresses  Address[]
   roles      UserRole[]
   auditEvents AuditEvent[]
+  createdCatalogCards CatalogCard[] @relation("CatalogCardCreator")
+  collectionItems CollectionItem[]
 
   @@index([status, createdAt])
   @@map("users")
@@ -203,6 +241,127 @@ model AuditEvent {
   @@index([actorUserId, createdAt])
   @@index([action, createdAt])
   @@map("audit_events")
+}
+
+model Category {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug             String   @unique
+  name             String
+  kind             String
+  attributesSchema Json     @default("{}") @map("attributes_schema")
+  active           Boolean  @default(true)
+  sortOrder        Int      @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  cardSets         CardSet[]
+  catalogCards     CatalogCard[]
+
+  @@map("categories")
+}
+
+model Manufacturer {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nameNormalized String   @unique @map("name_normalized")
+  nameDisplay    String   @map("name_display")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  cardSets       CardSet[]
+
+  @@map("manufacturers")
+}
+
+model CardSet {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId     String       @map("category_id") @db.Uuid
+  manufacturerId String       @map("manufacturer_id") @db.Uuid
+  name           String
+  nameNormalized String       @map("name_normalized")
+  yearStart      Int          @map("year_start")
+  yearEnd        Int?         @map("year_end")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  category       Category     @relation(fields: [categoryId], references: [id])
+  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id])
+  cards          CatalogCard[]
+
+  @@unique([categoryId, manufacturerId, nameNormalized, yearStart])
+  @@index([categoryId, yearStart])
+  @@map("card_sets")
+}
+
+model CatalogCard {
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId            String            @map("category_id") @db.Uuid
+  cardSetId             String            @map("card_set_id") @db.Uuid
+  playerOrCharacter     String            @map("player_or_character")
+  playerNormalized      String            @map("player_normalized")
+  year                  Int
+  cardNumber            String            @map("card_number")
+  subset                String?
+  variant               String?
+  languageCode          String            @default("en") @map("language_code") @db.Char(2)
+  isRookie              Boolean           @default(false) @map("is_rookie")
+  isAutograph           Boolean           @default(false) @map("is_autograph")
+  isMemorabilia         Boolean           @default(false) @map("is_memorabilia")
+  serialTotal           Int?              @map("serial_total")
+  attributes            Json              @default("{}")
+  fingerprint           String            @unique
+  status                CatalogCardStatus @default(PENDING_REVIEW)
+  createdByUserId       String?           @map("created_by_user_id") @db.Uuid
+  mergedIntoId          String?           @map("merged_into_id") @db.Uuid
+  createdAt             DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt             DateTime?         @map("deleted_at") @db.Timestamptz(6)
+  category              Category          @relation(fields: [categoryId], references: [id])
+  cardSet               CardSet           @relation(fields: [cardSetId], references: [id])
+  createdBy             User?             @relation("CatalogCardCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  mergedInto            CatalogCard?      @relation("CatalogMerge", fields: [mergedIntoId], references: [id])
+  mergedCards           CatalogCard[]     @relation("CatalogMerge")
+  collectionItems       CollectionItem[]
+
+  @@index([categoryId, year, status])
+  @@index([cardSetId, cardNumber])
+  @@index([playerNormalized])
+  @@map("catalog_cards")
+}
+
+model GradingCompany {
+  id                          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                        String   @unique
+  name                        String
+  gradeScale                  Json     @map("grade_scale")
+  certVerificationUrlTemplate String?  @map("cert_verification_url_template")
+  active                      Boolean  @default(true)
+  createdAt                   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  collectionItems             CollectionItem[]
+
+  @@map("grading_companies")
+}
+
+model CollectionItem {
+  id                  String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerUserId         String                 @map("owner_user_id") @db.Uuid
+  catalogCardId       String                 @map("catalog_card_id") @db.Uuid
+  conditionType       CollectionConditionType @map("condition_type")
+  rawCondition        RawCondition?          @map("raw_condition")
+  gradingCompanyId    String?                @map("grading_company_id") @db.Uuid
+  grade               Decimal?               @db.Decimal(4, 2)
+  certificationNumber String?                @map("certification_number")
+  itemNotes           String?                @map("item_notes")
+  visibility          CollectionVisibility   @default(PRIVATE)
+  availabilityStatus  CollectionAvailability @default(NOT_FOR_SALE) @map("availability_status")
+  acquiredAt          DateTime?              @map("acquired_at") @db.Date
+  acquisitionPriceMinor Int?                 @map("acquisition_price_minor")
+  version             Int                    @default(1)
+  createdAt           DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime               @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime?              @map("deleted_at") @db.Timestamptz(6)
+  owner               User                   @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  catalogCard         CatalogCard            @relation(fields: [catalogCardId], references: [id])
+  gradingCompany      GradingCompany?        @relation(fields: [gradingCompanyId], references: [id])
+
+  @@index([ownerUserId, availabilityStatus, deletedAt])
+  @@index([catalogCardId])
+  @@index([gradingCompanyId, certificationNumber])
+  @@map("collection_items")
 }
 
 model SystemMetadata {

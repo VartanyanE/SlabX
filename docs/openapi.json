@@ -218,6 +218,143 @@
           }
         }
       }
+    },
+    "/categories": {
+      "get": {
+        "operationId": "listCategories",
+        "summary": "List active card categories",
+        "responses": {
+          "200": {
+            "description": "List active card categories"
+          }
+        }
+      }
+    },
+    "/grading-companies": {
+      "get": {
+        "operationId": "listGradingCompanies",
+        "summary": "List active grading companies",
+        "responses": {
+          "200": {
+            "description": "List active grading companies"
+          }
+        }
+      }
+    },
+    "/catalog/sets": {
+      "get": {
+        "operationId": "listCardSets",
+        "summary": "List canonical card sets",
+        "responses": {
+          "200": {
+            "description": "List canonical card sets"
+          }
+        }
+      }
+    },
+    "/catalog/cards": {
+      "get": {
+        "operationId": "searchCatalogCards",
+        "summary": "Search the canonical card catalog",
+        "responses": {
+          "200": {
+            "description": "Search the canonical card catalog"
+          }
+        }
+      },
+      "post": {
+        "operationId": "submitCatalogCard",
+        "summary": "Submit a missing card for review",
+        "responses": {
+          "201": {
+            "description": "Submit a missing card for review"
+          }
+        }
+      }
+    },
+    "/catalog/cards/{cardId}": {
+      "parameters": [
+        {
+          "name": "cardId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getCatalogCard",
+        "summary": "Read canonical card details",
+        "responses": {
+          "200": {
+            "description": "Read canonical card details"
+          }
+        }
+      }
+    },
+    "/me/collection/items": {
+      "get": {
+        "operationId": "listMyCollection",
+        "summary": "List the current user’s collection",
+        "responses": {
+          "200": {
+            "description": "List the current user’s collection"
+          }
+        }
+      }
+    },
+    "/collection/items": {
+      "post": {
+        "operationId": "createCollectionItem",
+        "summary": "Add a physical card copy",
+        "responses": {
+          "201": {
+            "description": "Add a physical card copy"
+          }
+        }
+      }
+    },
+    "/collection/items/{itemId}": {
+      "parameters": [
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getCollectionItem",
+        "summary": "Read an owned or public collection item",
+        "responses": {
+          "200": {
+            "description": "Read an owned or public collection item"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateCollectionItem",
+        "summary": "Update an owned collection item",
+        "responses": {
+          "200": {
+            "description": "Update an owned collection item"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteCollectionItem",
+        "summary": "Archive an owned collection item",
+        "responses": {
+          "204": {
+            "description": "Archive an owned collection item"
+          }
+        }
+      }
     }
   }
 }

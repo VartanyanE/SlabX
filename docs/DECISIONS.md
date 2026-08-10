@@ -86,6 +86,13 @@ This file is the source of truth for significant technical choices. Accepted dec
 - **Why:** Keeps MVP deployment flexible among Render, Fly.io, Railway, AWS, GCP, or similar.
 - **Consequences:** Infrastructure provider and IaC tool remain open until Milestone 1.
 
+## ADR-013 — Curated seed catalog before vendor ingestion
+
+- **Status:** Accepted for Milestone 3
+- **Decision:** Launch the catalog model and contribution workflow with a small reviewed seed dataset. Keep source-specific imports outside the core catalog repository.
+- **Why:** No catalog licensing/source agreement exists yet, and identity/collection development should not depend on a vendor decision.
+- **Consequences:** The initial catalog is intentionally small. A licensed dataset or importer must preserve fingerprints, moderation status, and merge history when introduced.
+
 ## Open decisions requiring owners
 
 | ID | Decision | Owner needed by |
@@ -94,7 +101,7 @@ This file is the source of truth for significant technical choices. Accepted dec
 | OD-02 | Launch country/currency and international roadmap | Before address/payment implementation |
 | OD-03 | Stripe charge model and merchant-of-record/legal posture | Before Milestone 6 |
 | OD-04 | Raw-card condition vocabulary and photo requirements | Before catalog/listing UX |
-| OD-05 | Catalog contribution and moderation model | Before Milestone 3 |
+| OD-05 | Long-term catalog source, licensing, and moderation staffing | Before public catalog launch |
 | OD-06 | Reservation timeouts for checkout and accepted offers | Before offers/checkout |
 | OD-07 | Cancellation, return, dispute, and review policies | Before order state implementation |
 | OD-08 | Seller payout hold and delivery-confirmation policy | Before payments/shipping |
