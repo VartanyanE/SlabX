@@ -180,12 +180,74 @@ export const openApiDocument = {
         204,
       ),
     },
+    "/listings": {
+      get: operation(
+        "searchListings",
+        "Search active marketplace listings",
+        200,
+      ),
+      post: operation(
+        "createListing",
+        "Create a listing draft for an owned item",
+        201,
+      ),
+    },
+    "/listings/{listingId}": {
+      parameters: [listingIdParameter()],
+      get: operation("getListing", "Read public listing details", 200),
+      patch: operation(
+        "updateListing",
+        "Update a draft or paused owned listing",
+        200,
+      ),
+      delete: operation("closeListing", "Close an owned listing", 204),
+    },
+    "/listings/{listingId}/publish": {
+      parameters: [listingIdParameter()],
+      post: operation("publishListing", "Publish an owned listing", 204),
+    },
+    "/listings/{listingId}/pause": {
+      parameters: [listingIdParameter()],
+      post: operation("pauseListing", "Pause an active owned listing", 204),
+    },
+    "/listings/{listingId}/resume": {
+      parameters: [listingIdParameter()],
+      post: operation("resumeListing", "Resume a paused owned listing", 204),
+    },
+    "/me/listings": {
+      get: operation(
+        "listMyListings",
+        "List the current seller's listings",
+        200,
+      ),
+    },
+    "/me/watchlist": {
+      get: operation(
+        "listMyWatchlist",
+        "List the current buyer's watched listings",
+        200,
+      ),
+    },
+    "/me/watchlist/{listingId}": {
+      parameters: [listingIdParameter()],
+      put: operation("watchListing", "Watch an active listing", 204),
+      delete: operation("unwatchListing", "Remove a watched listing", 204),
+    },
   },
 } as const;
 
 function itemIdParameter() {
   return {
     name: "itemId",
+    in: "path",
+    required: true,
+    schema: { type: "string", format: "uuid" },
+  } as const;
+}
+
+function listingIdParameter() {
+  return {
+    name: "listingId",
     in: "path",
     required: true,
     schema: { type: "string", format: "uuid" },

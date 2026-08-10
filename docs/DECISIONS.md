@@ -93,6 +93,13 @@ This file is the source of truth for significant technical choices. Accepted dec
 - **Why:** No catalog licensing/source agreement exists yet, and identity/collection development should not depend on a vendor decision.
 - **Consequences:** The initial catalog is intentionally small. A licensed dataset or importer must preserve fingerprints, moderation status, and merge history when introduced.
 
+## ADR-014 — Draft marketplace fee policy
+
+- **Status:** Draft for Milestone 5; final approval required before checkout
+- **Decision:** Listings are free to create. Display prices represent the seller's asking price in USD. SlabX will model an 8% seller-paid marketplace fee, excluding payment processing, shipping, tax, refunds, and promotions, which remain open before the payments design freeze.
+- **Why:** Listing and discovery need a stable price meaning without prematurely coupling marketplace browsing to payment calculations.
+- **Consequences:** Milestone 5 stores only the asking price. Checkout must calculate and disclose final fees server-side, and the percentage may change before Milestone 7 without rewriting listing history.
+
 ## Open decisions requiring owners
 
 | ID | Decision | Owner needed by |

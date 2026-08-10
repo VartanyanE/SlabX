@@ -21,6 +21,7 @@ type AppDependencies = {
   clock?: () => Date;
   identityRouter?: Router;
   catalogRouter?: Router;
+  listingRouter?: Router;
 };
 
 export function createApp({
@@ -31,6 +32,7 @@ export function createApp({
   clock = () => new Date(),
   identityRouter,
   catalogRouter,
+  listingRouter,
 }: AppDependencies): Express {
   const app = express();
   app.disable("x-powered-by");
@@ -89,6 +91,7 @@ export function createApp({
   );
   if (identityRouter) app.use("/api/v1", identityRouter);
   if (catalogRouter) app.use("/api/v1", catalogRouter);
+  if (listingRouter) app.use("/api/v1", listingRouter);
 
   app.use((_request, response) => {
     response.status(404).json({

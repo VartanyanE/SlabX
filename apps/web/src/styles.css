@@ -83,6 +83,12 @@ nav {
 nav a {
   text-decoration: none;
 }
+nav {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  overflow-x: auto;
+}
 .hero {
   position: relative;
   padding: 5.5rem 1.25rem 4.5rem;
@@ -502,6 +508,85 @@ details summary {
   text-align: center;
   border: 1px dashed var(--line);
 }
+.listing-grid {
+  display: grid;
+  gap: 1rem;
+}
+.listing-card {
+  display: grid;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.listing-card:hover {
+  border-color: var(--lime);
+}
+.listing-card img,
+.listing-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  background: #0b1b15;
+}
+.listing-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--lime);
+  font-weight: 900;
+  letter-spacing: 0.2em;
+}
+.listing-card > div:last-child {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+.listing-card span,
+.listing-card em {
+  color: var(--lime);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.listing-card h2,
+.listing-card p {
+  margin: 0;
+}
+.listing-card h2 {
+  font-size: 1.5rem;
+}
+.listing-card strong {
+  font-size: 1.3rem;
+}
+.listing-detail {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+.detail-images {
+  display: grid;
+  gap: 0.75rem;
+}
+.detail-images img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+}
+.listing-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+.listing-actions button,
+.listing-actions a {
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--cream);
+}
 .missing-card {
   margin-top: 2rem;
   padding: 1rem;
@@ -571,6 +656,17 @@ footer {
   .card-detail {
     grid-template-columns: 1fr minmax(22rem, 0.7fr);
     align-items: start;
+  }
+  .listing-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .listing-detail {
+    grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.85fr);
+    align-items: start;
+  }
+  .listing-detail aside {
+    position: sticky;
+    top: 1rem;
   }
 }
 

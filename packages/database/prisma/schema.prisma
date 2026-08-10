@@ -73,6 +73,14 @@ enum MediaModerationStatus {
   REJECTED
 }
 
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  RESERVED
+  CLOSED
+}
+
 model User {
   id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   emailNormalized String     @unique(map: "users_email_normalized_key") @map("email_normalized")
@@ -95,6 +103,8 @@ model User {
   createdCatalogCards CatalogCard[] @relation("CatalogCardCreator")
   collectionItems CollectionItem[]
   mediaAssets     MediaAsset[]
+  listings        Listing[]       @relation("ListingSeller")
+  watchlist       WatchlistEntry[]
 
   @@index([status, createdAt])
   @@map("users")
@@ -365,11 +375,62 @@ model CollectionItem {
   catalogCard         CatalogCard            @relation(fields: [catalogCardId], references: [id])
   gradingCompany      GradingCompany?        @relation(fields: [gradingCompanyId], references: [id])
   media               ItemMedia[]
+  listings            Listing[]
 
   @@index([ownerUserId, availabilityStatus, deletedAt])
   @@index([catalogCardId])
   @@index([gradingCompanyId, certificationNumber])
   @@map("collection_items")
+}
+
+model Listing {
+  id                  String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sellerUserId        String           @map("seller_user_id") @db.Uuid
+  collectionItemId    String           @map("collection_item_id") @db.Uuid
+  status              ListingStatus    @default(DRAFT)
+  priceMinor          BigInt           @map("price_minor")
+  currency            String           @default("USD") @db.Char(3)
+  acceptsOffers       Boolean          @default(false) @map("accepts_offers")
+  minimumOfferMinor   BigInt?          @map("minimum_offer_minor")
+  conditionDisclosure String           @map("condition_disclosure")
+  publishedAt         DateTime?        @map("published_at") @db.Timestamptz(6)
+  version             Int              @default(1)
+  createdAt           DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime?        @map("deleted_at") @db.Timestamptz(6)
+  seller              User             @relation("ListingSeller", fields: [sellerUserId], references: [id], onDelete: Restrict)
+  collectionItem      CollectionItem   @relation(fields: [collectionItemId], references: [id], onDelete: Restrict)
+  priceHistory        ListingPriceHistory[]
+  watchers            WatchlistEntry[]
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([sellerUserId, status])
+  @@index([priceMinor])
+  @@index([collectionItemId])
+  @@map("listings")
+}
+
+model ListingPriceHistory {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listingId  String   @map("listing_id") @db.Uuid
+  priceMinor BigInt   @map("price_minor")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, createdAt(sort: Desc)])
+  @@map("listing_price_history")
+}
+
+model WatchlistEntry {
+  userId    String   @map("user_id") @db.Uuid
+  listingId String   @map("listing_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@id([userId, listingId])
+  @@index([listingId])
+  @@map("watchlist_entries")
 }
 
 model MediaAsset {
