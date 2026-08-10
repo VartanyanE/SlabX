@@ -35,6 +35,189 @@
           }
         }
       }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "register",
+        "summary": "Create an account",
+        "responses": {
+          "201": {
+            "description": "Create an account"
+          }
+        }
+      }
+    },
+    "/auth/email/verify": {
+      "post": {
+        "operationId": "verifyEmail",
+        "summary": "Verify an email address",
+        "responses": {
+          "204": {
+            "description": "Verify an email address"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "Create a session",
+        "responses": {
+          "200": {
+            "description": "Create a session"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "Revoke this session",
+        "responses": {
+          "204": {
+            "description": "Revoke this session"
+          }
+        }
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "operationId": "logoutAll",
+        "summary": "Revoke every session",
+        "responses": {
+          "204": {
+            "description": "Revoke every session"
+          }
+        }
+      }
+    },
+    "/auth/password/forgot": {
+      "post": {
+        "operationId": "forgotPassword",
+        "summary": "Request a password reset",
+        "responses": {
+          "202": {
+            "description": "Request a password reset"
+          }
+        }
+      }
+    },
+    "/auth/password/reset": {
+      "post": {
+        "operationId": "resetPassword",
+        "summary": "Reset a password",
+        "responses": {
+          "204": {
+            "description": "Reset a password"
+          }
+        }
+      }
+    },
+    "/auth/google/start": {
+      "get": {
+        "operationId": "startGoogleLogin",
+        "summary": "Begin Google OIDC",
+        "responses": {
+          "302": {
+            "description": "Begin Google OIDC"
+          }
+        }
+      }
+    },
+    "/auth/google/callback": {
+      "get": {
+        "operationId": "completeGoogleLogin",
+        "summary": "Complete Google OIDC",
+        "responses": {
+          "302": {
+            "description": "Complete Google OIDC"
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "operationId": "getMe",
+        "summary": "Read the current user",
+        "responses": {
+          "200": {
+            "description": "Read the current user"
+          }
+        }
+      }
+    },
+    "/me/sessions": {
+      "get": {
+        "operationId": "listSessions",
+        "summary": "List active sessions",
+        "responses": {
+          "200": {
+            "description": "List active sessions"
+          }
+        }
+      }
+    },
+    "/me/profile": {
+      "patch": {
+        "operationId": "updateProfile",
+        "summary": "Update the current profile",
+        "responses": {
+          "200": {
+            "description": "Update the current profile"
+          }
+        }
+      }
+    },
+    "/me/addresses": {
+      "get": {
+        "operationId": "listAddresses",
+        "summary": "List saved addresses",
+        "responses": {
+          "200": {
+            "description": "List saved addresses"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createAddress",
+        "summary": "Create a saved address",
+        "responses": {
+          "201": {
+            "description": "Create a saved address"
+          }
+        }
+      }
+    },
+    "/me/addresses/{addressId}": {
+      "parameters": [
+        {
+          "name": "addressId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "patch": {
+        "operationId": "updateAddress",
+        "summary": "Update an owned address",
+        "responses": {
+          "200": {
+            "description": "Update an owned address"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteAddress",
+        "summary": "Archive an owned address",
+        "responses": {
+          "204": {
+            "description": "Archive an owned address"
+          }
+        }
+      }
     }
   }
 }

@@ -80,6 +80,9 @@ nav {
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
+nav a {
+  text-decoration: none;
+}
 .hero {
   position: relative;
   padding: 5.5rem 1.25rem 4.5rem;
@@ -207,6 +210,126 @@ h2 {
 .not-found h1 {
   font-size: clamp(3rem, 10vw, 6rem);
 }
+.auth-page {
+  display: grid;
+  gap: 2.5rem;
+  max-width: 76rem;
+  min-height: calc(100vh - 8rem);
+  margin: auto;
+  padding: 4.5rem 1.25rem;
+}
+.auth-page h1,
+.account-page h1 {
+  font-size: clamp(2.8rem, 9vw, 5.5rem);
+}
+.auth-lead {
+  max-width: 34rem;
+  color: #aebbb4;
+  line-height: 1.7;
+}
+.auth-panel,
+.account-card {
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.025);
+}
+.auth-form {
+  display: grid;
+  gap: 1rem;
+}
+.form-field {
+  display: grid;
+  gap: 0.45rem;
+  color: #aebbb4;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.form-field input,
+.form-field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.2rem;
+  background: #0b1b15;
+  color: var(--cream);
+  padding: 0.9rem 1rem;
+  font: inherit;
+}
+.form-field textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+.form-error {
+  color: #ff9b88;
+}
+.form-footnote {
+  color: #94a49b;
+  text-align: center;
+}
+.form-footnote a {
+  color: var(--lime);
+}
+.account-page {
+  max-width: 76rem;
+  margin: auto;
+  padding: 4rem 1.25rem;
+}
+.account-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+.account-heading h1 {
+  margin-bottom: 0.5rem;
+}
+.account-heading p {
+  color: #9bada2;
+}
+.account-card {
+  margin-top: 1rem;
+}
+.account-card h2 {
+  font-size: 1.8rem;
+  letter-spacing: -0.03em;
+}
+.address-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.address-list article {
+  position: relative;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  color: #aebbb4;
+}
+.address-list article strong {
+  color: var(--cream);
+}
+.address-list article span {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: var(--lime);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+details summary {
+  cursor: pointer;
+  color: var(--lime);
+  font-weight: 800;
+  margin: 1rem 0;
+}
+.compact-form {
+  max-width: 34rem;
+}
+.check-field {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: #aebbb4;
+}
 footer {
   border-top: 1px solid var(--line);
   border-bottom: 0;
@@ -237,6 +360,26 @@ footer {
   }
   .feature-grid article {
     min-height: 18rem;
+  }
+  .auth-page {
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: center;
+    padding: 7rem 2.5rem;
+  }
+  .auth-panel,
+  .account-card {
+    padding: 2rem;
+  }
+  .account-page {
+    padding: 6rem 2.5rem;
+  }
+  .account-heading {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .address-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

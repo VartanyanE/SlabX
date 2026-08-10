@@ -2,7 +2,7 @@
 
 SlabX is a planned mobile-first marketplace for buying, selling, offering on, collecting, and eventually trading collectible cards.
 
-This repository has completed **Milestone 1: Platform Foundation**. It contains the mobile-first web shell, versioned API, PostgreSQL/Prisma baseline, shared packages, automated checks, and deployment-ready container definitions. Marketplace features begin in Milestone 2.
+This repository has completed **Milestone 1: Platform Foundation** and now includes the **Milestone 2 authentication and profile implementation**. The platform has a mobile-first web shell, versioned API, PostgreSQL/Prisma data layer, shared packages, automated checks, and deployment-ready container definitions.
 
 ## Product vision
 
@@ -67,6 +67,15 @@ Milestone 1 provides:
 - unit/API/component tests, Playwright smoke coverage, and GitHub Actions CI
 - local PostgreSQL Compose configuration and production container definitions
 
+Milestone 2 adds:
+
+- email/password registration, verification, login, logout, and password recovery
+- Google OpenID Connect with state, nonce, and PKCE protection
+- Argon2id password hashing, opaque server sessions, CSRF protection, throttling, and lockout controls
+- collector profiles, an ownership-scoped address book, active-session visibility, and sign-out-everywhere
+- identity, profile, role, token, session, address, and audit-event database models
+- security-focused identity tests and an expanded OpenAPI contract
+
 ### Run locally
 
 1. Install Node.js 24 and enable the pinned pnpm version with Corepack.
@@ -77,4 +86,4 @@ Milestone 1 provides:
 
 Use `pnpm check` for the full local quality suite and `pnpm test:e2e` for browser smoke tests.
 
-**Next milestone:** implement authentication and profiles from Milestone 2 after product approval.
+Before staging, configure the email delivery provider and Google credentials listed in `.env.example`. The next product milestone is **Milestone 3: Catalog and collection**.

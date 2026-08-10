@@ -6,7 +6,20 @@ const serverEnvironmentSchema = z.object({
     .default("development"),
   API_PORT: z.coerce.number().int().positive().max(65535).default(5050),
   WEB_ORIGIN: z.url().default("http://localhost:5173"),
+  API_ORIGIN: z.url().default("http://localhost:5050"),
   DATABASE_URL: z.string().min(1),
+  SESSION_SECRET: z
+    .string()
+    .min(32)
+    .default("development-only-session-secret-change-me"),
+  PASSWORD_PEPPER: z.string().default(""),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_CALLBACK_URL: z
+    .url()
+    .default("http://localhost:5050/api/v1/auth/google/callback"),
+  EMAIL_PROVIDER_API_KEY: z.string().min(1).optional(),
+  EMAIL_FROM: z.string().min(3).default("SlabX <no-reply@example.test>"),
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),

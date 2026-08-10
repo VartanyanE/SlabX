@@ -4,6 +4,7 @@ import express, {
   type ErrorRequestHandler,
   type Express,
   type RequestHandler,
+  type Router,
 } from "express";
 import helmet from "helmet";
 import { pinoHttp } from "pino-http";
@@ -18,6 +19,7 @@ type AppDependencies = {
   version?: string;
   webOrigin: string;
   clock?: () => Date;
+  identityRouter?: Router;
 };
 
 export function createApp({
@@ -26,6 +28,7 @@ export function createApp({
   version = "0.1.0",
   webOrigin,
   clock = () => new Date(),
+  identityRouter,
 }: AppDependencies): Express {
   const app = express();
   app.disable("x-powered-by");
@@ -82,6 +85,7 @@ export function createApp({
   app.get("/api/v1/openapi.json", (_request, response) =>
     response.json(openApiDocument),
   );
+  if (identityRouter) app.use("/api/v1", identityRouter);
 
   app.use((_request, response) => {
     response.status(404).json({
