@@ -152,6 +152,39 @@ export type CatalogCardInput = z.infer<typeof catalogCardInputSchema>;
 export type CollectionItemInput = z.infer<typeof collectionItemInputSchema>;
 export type CollectionQuery = z.infer<typeof collectionQuerySchema>;
 
+export const mediaConfirmationSchema = z.object({
+  publicId: z.string().min(1).max(255),
+});
+export const mediaReorderSchema = z.object({
+  mediaIds: z.array(z.uuid()).min(1).max(12),
+});
+export type MediaConfirmation = z.infer<typeof mediaConfirmationSchema>;
+export type MediaReorder = z.infer<typeof mediaReorderSchema>;
+
+export type MediaAsset = {
+  id: string;
+  publicId: string;
+  secureUrl: string;
+  width: number;
+  height: number;
+  format: string;
+  bytes: number;
+  position: number;
+  isPrimary: boolean;
+  moderationStatus: "PENDING" | "APPROVED" | "REJECTED";
+};
+
+export type SignedUpload = {
+  cloudName: string;
+  apiKey: string;
+  timestamp: number;
+  folder: string;
+  publicId: string;
+  signature: string;
+  maxBytes: number;
+  allowedFormats: string[];
+};
+
 export type CatalogCard = {
   id: string;
   categoryId: string;
@@ -183,4 +216,5 @@ export type CollectionItem = {
   acquiredAt: string | null;
   acquisitionPriceMinor: number | null;
   version: number;
+  media: MediaAsset[];
 };

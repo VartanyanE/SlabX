@@ -67,6 +67,12 @@ enum CollectionAvailability {
   TRADE_LOCKED
 }
 
+enum MediaModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   emailNormalized String     @unique(map: "users_email_normalized_key") @map("email_normalized")
@@ -88,6 +94,7 @@ model User {
   auditEvents AuditEvent[]
   createdCatalogCards CatalogCard[] @relation("CatalogCardCreator")
   collectionItems CollectionItem[]
+  mediaAssets     MediaAsset[]
 
   @@index([status, createdAt])
   @@map("users")
@@ -357,11 +364,48 @@ model CollectionItem {
   owner               User                   @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
   catalogCard         CatalogCard            @relation(fields: [catalogCardId], references: [id])
   gradingCompany      GradingCompany?        @relation(fields: [gradingCompanyId], references: [id])
+  media               ItemMedia[]
 
   @@index([ownerUserId, availabilityStatus, deletedAt])
   @@index([catalogCardId])
   @@index([gradingCompanyId, certificationNumber])
   @@map("collection_items")
+}
+
+model MediaAsset {
+  id               String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerUserId      String                  @map("owner_user_id") @db.Uuid
+  provider         String                  @default("cloudinary")
+  providerAssetId  String                  @unique @map("provider_asset_id")
+  publicId         String                  @unique @map("public_id")
+  secureUrl        String                  @map("secure_url")
+  format           String
+  width            Int
+  height           Int
+  bytes            Int
+  moderationStatus MediaModerationStatus   @default(PENDING) @map("moderation_status")
+  createdAt        DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt        DateTime?               @map("deleted_at") @db.Timestamptz(6)
+  owner            User                    @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  items            ItemMedia[]
+
+  @@index([ownerUserId, deletedAt])
+  @@map("media_assets")
+}
+
+model ItemMedia {
+  collectionItemId String         @map("collection_item_id") @db.Uuid
+  mediaAssetId     String         @map("media_asset_id") @db.Uuid
+  position         Int            @default(0)
+  isPrimary        Boolean        @default(false) @map("is_primary")
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  collectionItem   CollectionItem @relation(fields: [collectionItemId], references: [id], onDelete: Cascade)
+  mediaAsset       MediaAsset     @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@id([collectionItemId, mediaAssetId])
+  @@unique([collectionItemId, position])
+  @@index([mediaAssetId])
+  @@map("item_media")
 }
 
 model SystemMetadata {
