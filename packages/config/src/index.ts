@@ -18,6 +18,8 @@ const serverEnvironmentSchema = z.object({
   GOOGLE_CALLBACK_URL: z
     .url()
     .default("http://localhost:5050/api/v1/auth/google/callback"),
+  EMAIL_PROVIDER_API_KEY: z.string().min(1).optional(),
+  EMAIL_FROM: z.string().min(3).default("SlabX <no-reply@example.test>"),
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),

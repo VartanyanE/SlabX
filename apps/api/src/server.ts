@@ -4,7 +4,7 @@ import { loadServerEnvironment } from "@slabx/config";
 import { createDatabaseHealthCheck, createDatabasePool } from "@slabx/database";
 import { createLogger } from "@slabx/observability";
 import { createApp } from "./app.js";
-import { PendingEmailDelivery } from "./identity/email.js";
+import { PendingEmailDelivery, ResendEmailDelivery } from "./identity/email.js";
 import { GoogleOidc } from "./identity/google.js";
 import { PostgresIdentityRepository } from "./identity/postgres-repository.js";
 import { createIdentityRouter } from "./identity/routes.js";
@@ -17,7 +17,13 @@ const identityService = new IdentityService({
   repository: new PostgresIdentityRepository(
     createDatabasePool(environment.DATABASE_URL),
   ),
-  email: new PendingEmailDelivery(logger),
+  email: environment.EMAIL_PROVIDER_API_KEY
+    ? new ResendEmailDelivery({
+        apiKey: environment.EMAIL_PROVIDER_API_KEY,
+        from: environment.EMAIL_FROM,
+        webOrigin: environment.WEB_ORIGIN,
+      })
+    : new PendingEmailDelivery(logger),
   secret: environment.SESSION_SECRET,
   passwordPepper: environment.PASSWORD_PEPPER,
 });
