@@ -23,6 +23,8 @@ type AppDependencies = {
   catalogRouter?: Router;
   listingRouter?: Router;
   offerRouter?: Router;
+  paymentRouter?: Router;
+  stripeWebhookHandlers?: RequestHandler[];
 };
 
 export function createApp({
@@ -35,12 +37,13 @@ export function createApp({
   catalogRouter,
   listingRouter,
   offerRouter,
+  paymentRouter,
+  stripeWebhookHandlers,
 }: AppDependencies): Express {
   const app = express();
   app.disable("x-powered-by");
   app.use(helmet());
   app.use(cors({ origin: webOrigin, credentials: true }));
-  app.use(express.json({ limit: "1mb" }));
   app.use(
     pinoHttp({
       logger,
@@ -52,6 +55,9 @@ export function createApp({
       },
     }),
   );
+  if (stripeWebhookHandlers)
+    app.post("/api/v1/payments/stripe/webhook", ...stripeWebhookHandlers);
+  app.use(express.json({ limit: "1mb" }));
 
   const live: RequestHandler = (_request, response) => {
     response.json(
@@ -95,6 +101,7 @@ export function createApp({
   if (catalogRouter) app.use("/api/v1", catalogRouter);
   if (listingRouter) app.use("/api/v1", listingRouter);
   if (offerRouter) app.use("/api/v1", offerRouter);
+  if (paymentRouter) app.use("/api/v1", paymentRouter);
 
   app.use((_request, response) => {
     response.status(404).json({

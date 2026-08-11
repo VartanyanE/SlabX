@@ -300,6 +300,59 @@ export type OfferThread = {
   revisions: OfferRevision[];
 };
 
+export const checkoutCreateSchema = z
+  .object({
+    listingId: z.uuid().optional(),
+    offerThreadId: z.uuid().optional(),
+    shippingAddressId: z.uuid(),
+    idempotencyKey: z.uuid(),
+  })
+  .refine(
+    (value) =>
+      Number(Boolean(value.listingId)) +
+        Number(Boolean(value.offerThreadId)) ===
+      1,
+    {
+      message: "Choose either a listing or an accepted offer.",
+    },
+  );
+export type CheckoutCreate = z.infer<typeof checkoutCreateSchema>;
+
+export type ConnectedAccount = {
+  status: "NOT_STARTED" | "PENDING" | "ACTIVE" | "RESTRICTED";
+  detailsSubmitted: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  requirementsCurrentlyDue: string[];
+};
+
+export type Order = {
+  id: string;
+  orderNumber: string;
+  status: "PENDING_PAYMENT" | "PAID" | "PAYMENT_FAILED" | "CANCELLED";
+  buyerUserId: string;
+  sellerUserId: string;
+  listingId: string;
+  subtotalMinor: number;
+  platformFeeMinor: number;
+  sellerProceedsMinor: number;
+  currency: "USD";
+  paidAt: string | null;
+  createdAt: string;
+  item: {
+    playerOrCharacter: string;
+    year: number;
+    setName: string;
+    cardNumber: string;
+    imageUrl: string | null;
+  };
+};
+
+export type CheckoutSession = {
+  order: Order;
+  checkoutUrl: string;
+};
+
 export type CatalogCard = {
   id: string;
   categoryId: string;

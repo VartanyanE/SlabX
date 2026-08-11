@@ -111,4 +111,8 @@ Milestone 6 adds immutable offer and counteroffer timelines, safe actor/state tr
 
 Use `pnpm check` for the full local quality suite and `pnpm test:e2e` for browser smoke tests.
 
-Before staging, configure the providers listed in `.env.example`. The next product milestone is **Milestone 7: Checkout and Stripe Connect**.
+Before staging, configure the providers listed in `.env.example`.
+
+Milestone 7 adds Stripe Connect seller onboarding, buy-now and accepted-offer checkout, immutable order snapshots, an 8% seller-paid fee, signed webhook reconciliation, balanced ledger entries, payment recovery, and buyer/seller order views. Payments remain test-mode only until shipping, tax, refund, dispute, and payout policies are approved. See `docs/PAYMENT_POLICY.md`.
+
+The next product milestone is **Milestone 8: Shipping and fulfillment**.

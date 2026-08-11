@@ -774,6 +774,94 @@
           }
         }
       }
+    },
+    "/seller/payment-account": {
+      "get": {
+        "operationId": "getSellerPaymentAccount",
+        "summary": "Read seller onboarding status",
+        "responses": {
+          "200": {
+            "description": "Read seller onboarding status"
+          }
+        }
+      }
+    },
+    "/seller/payment-account/onboarding": {
+      "post": {
+        "operationId": "startSellerOnboarding",
+        "summary": "Create a secure Stripe onboarding link",
+        "responses": {
+          "201": {
+            "description": "Create a secure Stripe onboarding link"
+          }
+        }
+      }
+    },
+    "/seller/payment-account/refresh": {
+      "post": {
+        "operationId": "refreshSellerPaymentAccount",
+        "summary": "Refresh seller capability status",
+        "responses": {
+          "200": {
+            "description": "Refresh seller capability status"
+          }
+        }
+      }
+    },
+    "/checkout": {
+      "post": {
+        "operationId": "createCheckout",
+        "summary": "Reserve one listing and create Stripe Checkout",
+        "responses": {
+          "201": {
+            "description": "Reserve one listing and create Stripe Checkout"
+          }
+        }
+      }
+    },
+    "/payments/stripe/webhook": {
+      "post": {
+        "operationId": "receiveStripeWebhook",
+        "summary": "Verify and reconcile a Stripe event",
+        "responses": {
+          "200": {
+            "description": "Verify and reconcile a Stripe event"
+          }
+        }
+      }
+    },
+    "/me/orders": {
+      "get": {
+        "operationId": "listMyOrders",
+        "summary": "List purchases and sales",
+        "responses": {
+          "200": {
+            "description": "List purchases and sales"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "parameters": [
+        {
+          "name": "orderId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getOrder",
+        "summary": "Read a buyer or seller order",
+        "responses": {
+          "200": {
+            "description": "Read a buyer or seller order"
+          }
+        }
+      }
     }
   }
 }

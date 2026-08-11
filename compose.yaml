@@ -13,7 +13,7 @@ services:
       timeout: 5s
       retries: 10
     volumes:
-      - slabx-postgres:/var/lib/postgresql/data
+      - slabx-postgres:/var/lib/postgresql
 
 volumes:
   slabx-postgres:

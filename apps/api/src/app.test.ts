@@ -1,4 +1,5 @@
 import request from "supertest";
+import express from "express";
 import { describe, expect, it } from "vitest";
 import { createLogger } from "@slabx/observability";
 import { createApp } from "./app.js";
@@ -39,5 +40,31 @@ describe("health endpoints", () => {
     });
     const response = await request(app).get("/api/v1/health/ready").expect(503);
     expect(response.body).toMatchObject({ status: "degraded" });
+  });
+});
+
+describe("Stripe webhook transport", () => {
+  it("preserves the unmodified request body for signature verification", async () => {
+    let received: Buffer | null = null;
+    const app = createApp({
+      databaseHealthCheck: async () => undefined,
+      logger,
+      webOrigin: "http://localhost:5173",
+      stripeWebhookHandlers: [
+        express.raw({ type: "application/json" }),
+        (req, res) => {
+          received = req.body as Buffer;
+          res.status(200).end();
+        },
+      ],
+    });
+    const payload = '{"id":"evt_test","type":"checkout.session.completed"}';
+    await request(app)
+      .post("/api/v1/payments/stripe/webhook")
+      .set("content-type", "application/json")
+      .send(payload)
+      .expect(200);
+    expect(Buffer.isBuffer(received)).toBe(true);
+    expect(received).toEqual(Buffer.from(payload));
   });
 });

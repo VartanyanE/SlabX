@@ -158,6 +158,14 @@ export function ListingDetailPage() {
           >
             {value.watched ? "Remove from watchlist" : "Watch this card"}
           </button>
+          {value.status === "ACTIVE" && (
+            <Link
+              className="button button-primary"
+              to={`/checkout/${value.id}`}
+            >
+              Buy now
+            </Link>
+          )}
           {value.acceptsOffers && <MakeOffer listingId={value.id} />}
         </aside>
       </section>
@@ -304,6 +312,9 @@ export function SellingPage() {
         <h1>Your listings.</h1>
         <Link className="button button-primary" to="/sell">
           New listing
+        </Link>
+        <Link className="button button-secondary" to="/seller/onboarding">
+          Payment setup
         </Link>
       </header>
       <div className="card-grid">

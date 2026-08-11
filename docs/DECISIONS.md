@@ -100,13 +100,20 @@ This file is the source of truth for significant technical choices. Accepted dec
 - **Why:** Listing and discovery need a stable price meaning without prematurely coupling marketplace browsing to payment calculations.
 - **Consequences:** Milestone 5 stores only the asking price. Checkout must calculate and disclose final fees server-side, and the percentage may change before Milestone 7 without rewriting listing history.
 
+## ADR-015 — Milestone 7 test-mode payment freeze
+
+- **Status:** Accepted for test mode; live-mode approval pending
+- **Decision:** Launch development with U.S./USD only, an 8% seller-paid platform fee, Stripe-hosted onboarding, and Connect destination charges. Stripe webhooks are authoritative and financial records use immutable balanced ledger entries.
+- **Why:** This matches the existing marketplace model, minimizes stored compliance data, and provides a complete reconciliation path while product/legal decisions remain open.
+- **Consequences:** SlabX bears Stripe fees and destination-charge refund/dispute exposure. Shipping, tax, refunds, disputes, and live payouts remain disabled until reviewed.
+
 ## Open decisions requiring owners
 
 | ID | Decision | Owner needed by |
 | --- | --- | --- |
-| OD-01 | Marketplace fee, fee allocation, refunds, and payout timing | Before payments design freeze |
-| OD-02 | Launch country/currency and international roadmap | Before address/payment implementation |
-| OD-03 | Stripe charge model and merchant-of-record/legal posture | Before Milestone 6 |
+| OD-01 | Refund allocation and seller payout timing; 8% seller fee accepted for test mode | Before live payments |
+| OD-02 | International roadmap; U.S./USD accepted for test mode | Before live payments |
+| OD-03 | Live merchant-of-record/legal posture; destination charges accepted for test mode | Before live payments |
 | OD-04 | Raw-card condition vocabulary and photo requirements | Before catalog/listing UX |
 | OD-05 | Long-term catalog source, licensing, and moderation staffing | Before public catalog launch |
 | OD-06 | Reservation timeouts for checkout and accepted offers | Before offers/checkout |
