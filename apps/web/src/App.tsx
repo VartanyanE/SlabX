@@ -145,7 +145,12 @@ export function App() {
       </Routes>
       <footer>
         <span>© 2026 SlabX</span>
-        <span>Built for collectors.</span>
+        <nav aria-label="Legal">
+          <a href="/terms.html">Terms</a>
+          <a href="/returns.html">Returns</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/contact.html">Contact</a>
+        </nav>
       </footer>
     </div>
   );
