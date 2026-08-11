@@ -94,6 +94,27 @@ enum OfferRevisionKind {
   COUNTER
 }
 
+enum ConnectedAccountStatus {
+  PENDING
+  ACTIVE
+  RESTRICTED
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PAYMENT_FAILED
+  CANCELLED
+}
+
+enum PaymentAttemptStatus {
+  CREATED
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
 model User {
   id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   emailNormalized String     @unique(map: "users_email_normalized_key") @map("email_normalized")
@@ -122,6 +143,10 @@ model User {
   sellerOfferThreads OfferThread[] @relation("OfferSeller")
   offerRevisions OfferRevision[]
   notifications Notification[]
+  connectedAccount ConnectedAccount?
+  buyerOrders Order[] @relation("OrderBuyer")
+  sellerOrders Order[] @relation("OrderSeller")
+  paymentAttempts PaymentAttempt[]
 
   @@index([status, createdAt])
   @@map("users")
@@ -423,6 +448,7 @@ model Listing {
   priceHistory        ListingPriceHistory[]
   watchers            WatchlistEntry[]
   offerThreads         OfferThread[]
+  orders               Order[]
 
   @@index([status, publishedAt(sort: Desc)])
   @@index([sellerUserId, status])
@@ -447,6 +473,7 @@ model OfferThread {
   buyer              User              @relation("OfferBuyer", fields: [buyerUserId], references: [id], onDelete: Restrict)
   seller             User              @relation("OfferSeller", fields: [sellerUserId], references: [id], onDelete: Restrict)
   revisions          OfferRevision[]
+  orders             Order[]
 
   @@index([buyerUserId, status, updatedAt(sort: Desc)])
   @@index([sellerUserId, status, updatedAt(sort: Desc)])
@@ -496,6 +523,115 @@ model OutboxEvent {
 
   @@index([processedAt, availableAt])
   @@map("outbox_events")
+}
+
+model ConnectedAccount {
+  id                    String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String                 @unique @map("user_id") @db.Uuid
+  providerAccountId     String                 @unique @map("provider_account_id")
+  status                ConnectedAccountStatus @default(PENDING)
+  detailsSubmitted      Boolean                @default(false) @map("details_submitted")
+  chargesEnabled        Boolean                @default(false) @map("charges_enabled")
+  payoutsEnabled        Boolean                @default(false) @map("payouts_enabled")
+  requirementsCurrentlyDue Json                @default("[]") @map("requirements_currently_due")
+  createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime               @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  orders                Order[]
+
+  @@map("connected_accounts")
+}
+
+model Order {
+  id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderNumber        String      @unique @map("order_number")
+  buyerUserId        String      @map("buyer_user_id") @db.Uuid
+  sellerUserId       String      @map("seller_user_id") @db.Uuid
+  listingId          String      @map("listing_id") @db.Uuid
+  offerThreadId      String?     @map("offer_thread_id") @db.Uuid
+  connectedAccountId String      @map("connected_account_id") @db.Uuid
+  status             OrderStatus @default(PENDING_PAYMENT)
+  currency           String      @default("USD") @db.Char(3)
+  subtotalMinor      BigInt      @map("subtotal_minor")
+  platformFeeMinor   BigInt      @map("platform_fee_minor")
+  sellerProceedsMinor BigInt     @map("seller_proceeds_minor")
+  shippingAddressSnapshot Json?  @map("shipping_address_snapshot")
+  paidAt             DateTime?   @map("paid_at") @db.Timestamptz(6)
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  buyer              User        @relation("OrderBuyer", fields: [buyerUserId], references: [id], onDelete: Restrict)
+  seller             User        @relation("OrderSeller", fields: [sellerUserId], references: [id], onDelete: Restrict)
+  listing            Listing     @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  offerThread        OfferThread? @relation(fields: [offerThreadId], references: [id], onDelete: Restrict)
+  connectedAccount   ConnectedAccount @relation(fields: [connectedAccountId], references: [id], onDelete: Restrict)
+  item               OrderItem?
+  paymentAttempts    PaymentAttempt[]
+  ledgerEntries      LedgerEntry[]
+
+  @@index([buyerUserId, createdAt(sort: Desc)])
+  @@index([sellerUserId, createdAt(sort: Desc)])
+  @@index([listingId, status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId                 String   @unique @map("order_id") @db.Uuid
+  listingSnapshot         Json     @map("listing_snapshot")
+  collectionItemSnapshot  Json     @map("collection_item_snapshot")
+  catalogCardSnapshot     Json     @map("catalog_card_snapshot")
+  createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  order                   Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}
+
+model PaymentAttempt {
+  id                     String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId                String               @map("order_id") @db.Uuid
+  buyerUserId            String               @map("buyer_user_id") @db.Uuid
+  idempotencyKey         String               @unique @map("idempotency_key") @db.Uuid
+  providerCheckoutId     String?              @unique @map("provider_checkout_id")
+  providerPaymentIntentId String?              @unique @map("provider_payment_intent_id")
+  status                 PaymentAttemptStatus @default(CREATED)
+  failureCode            String?              @map("failure_code")
+  failureMessage         String?              @map("failure_message")
+  createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order                  Order                @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  buyer                  User                 @relation(fields: [buyerUserId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt(sort: Desc)])
+  @@map("payment_attempts")
+}
+
+model LedgerEntry {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId     String   @map("order_id") @db.Uuid
+  accountCode String   @map("account_code")
+  amountMinor BigInt   @map("amount_minor")
+  currency    String   @default("USD") @db.Char(3)
+  description String
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+  @@map("ledger_entries")
+}
+
+model WebhookInbox {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider        String
+  providerEventId String    @map("provider_event_id")
+  eventType       String    @map("event_type")
+  payload         Json
+  processedAt     DateTime? @map("processed_at") @db.Timestamptz(6)
+  errorMessage    String?   @map("error_message")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([provider, providerEventId])
+  @@index([processedAt, createdAt])
+  @@map("webhook_inbox")
 }
 
 model ListingPriceHistory {

@@ -276,6 +276,55 @@ export const openApiDocument = {
       parameters: [threadIdParameter()],
       post: operation("cancelOffer", "Cancel a pending buyer offer", 204),
     },
+    "/seller/payment-account": {
+      get: operation(
+        "getSellerPaymentAccount",
+        "Read seller onboarding status",
+        200,
+      ),
+    },
+    "/seller/payment-account/onboarding": {
+      post: operation(
+        "startSellerOnboarding",
+        "Create a secure Stripe onboarding link",
+        201,
+      ),
+    },
+    "/seller/payment-account/refresh": {
+      post: operation(
+        "refreshSellerPaymentAccount",
+        "Refresh seller capability status",
+        200,
+      ),
+    },
+    "/checkout": {
+      post: operation(
+        "createCheckout",
+        "Reserve one listing and create Stripe Checkout",
+        201,
+      ),
+    },
+    "/payments/stripe/webhook": {
+      post: operation(
+        "receiveStripeWebhook",
+        "Verify and reconcile a Stripe event",
+        200,
+      ),
+    },
+    "/me/orders": {
+      get: operation("listMyOrders", "List purchases and sales", 200),
+    },
+    "/orders/{orderId}": {
+      parameters: [
+        {
+          name: "orderId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      get: operation("getOrder", "Read a buyer or seller order", 200),
+    },
   },
 } as const;
 

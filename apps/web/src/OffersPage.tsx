@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
-import { Navigate } from "react-router";
+import { Link, Navigate } from "react-router";
 import type { OfferThread } from "@slabx/contracts";
 import { authApi } from "./api/auth";
 import { offerApi } from "./api/offers";
@@ -106,13 +106,23 @@ function OfferPanel({
         ))}
       </ol>
       {thread.status === "ACCEPTED" && (
-        <p className="offer-success">
-          Accepted. Checkout is reserved until{" "}
-          {thread.checkoutExpiresAt
-            ? new Date(thread.checkoutExpiresAt).toLocaleTimeString()
-            : "soon"}
-          .
-        </p>
+        <div className="offer-success">
+          <p>
+            Accepted. Checkout is reserved until{" "}
+            {thread.checkoutExpiresAt
+              ? new Date(thread.checkoutExpiresAt).toLocaleTimeString()
+              : "soon"}
+            .
+          </p>
+          {isBuyer && (
+            <Link
+              className="button button-primary"
+              to={`/checkout/${thread.listingId}?offer=${thread.id}`}
+            >
+              Pay now
+            </Link>
+          )}
+        </div>
       )}
       {thread.status === "OPEN" && (
         <div className="offer-actions">

@@ -21,6 +21,13 @@ import { ListingService } from "./listings/service.js";
 import { OfferRepository } from "./offers/repository.js";
 import { createOfferRouter } from "./offers/routes.js";
 import { OfferService } from "./offers/service.js";
+import { PaymentRepository } from "./payments/repository.js";
+import {
+  createPaymentRouter,
+  createStripeWebhookHandler,
+} from "./payments/routes.js";
+import { PaymentService } from "./payments/service.js";
+import { StripePaymentProvider } from "./payments/stripe.js";
 
 loadDotenv({ path: resolve(process.cwd(), "../../.env"), quiet: true });
 const environment = loadServerEnvironment(process.env);
@@ -71,6 +78,17 @@ const catalogRouter = createCatalogRouter({
       }
     : {}),
 });
+const paymentService =
+  environment.STRIPE_SECRET_KEY && environment.STRIPE_WEBHOOK_SECRET
+    ? new PaymentService(
+        new PaymentRepository(databasePool),
+        new StripePaymentProvider(
+          environment.STRIPE_SECRET_KEY,
+          environment.STRIPE_WEBHOOK_SECRET,
+        ),
+        environment.WEB_ORIGIN,
+      )
+    : null;
 const app = createApp({
   databaseHealthCheck: createDatabaseHealthCheck(environment.DATABASE_URL),
   logger,
@@ -85,6 +103,15 @@ const app = createApp({
     service: new OfferService(new OfferRepository(databasePool)),
     identity: identityService,
   }),
+  ...(paymentService
+    ? {
+        paymentRouter: createPaymentRouter({
+          service: paymentService,
+          identity: identityService,
+        }),
+        stripeWebhookHandlers: createStripeWebhookHandler(paymentService),
+      }
+    : {}),
 });
 
 const server = app.listen(environment.API_PORT, () => {

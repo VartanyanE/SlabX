@@ -13,7 +13,14 @@ else {
         `UPDATE offer_threads t SET status='EXPIRED',version=version+1,updated_at=CURRENT_TIMESTAMP FROM offer_revisions r WHERE t.status='OPEN' AND r.id=t.current_revision_id AND r.expires_at<=CURRENT_TIMESTAMP RETURNING t.id`,
       );
       const released = await pool.query(
-        `UPDATE listings SET status='ACTIVE',reserved_by_user_id=NULL,reserved_until=NULL,reservation_reason=NULL,version=version+1,updated_at=CURRENT_TIMESTAMP WHERE status='RESERVED' AND reservation_reason='ACCEPTED_OFFER' AND reserved_until<=CURRENT_TIMESTAMP RETURNING id`,
+        `UPDATE listings SET status='ACTIVE',reserved_by_user_id=NULL,reserved_until=NULL,reservation_reason=NULL,version=version+1,updated_at=CURRENT_TIMESTAMP WHERE status='RESERVED' AND reservation_reason IN ('ACCEPTED_OFFER','CHECKOUT') AND reserved_until<=CURRENT_TIMESTAMP RETURNING id`,
+      );
+      const cancelledOrders = await pool.query(
+        `UPDATE orders o SET status='CANCELLED',updated_at=CURRENT_TIMESTAMP FROM listings l WHERE o.listing_id=l.id AND o.status='PENDING_PAYMENT' AND l.status='ACTIVE' AND l.reserved_by_user_id IS NULL RETURNING o.id`,
+      );
+      await pool.query(
+        `UPDATE payment_attempts SET status='CANCELLED',updated_at=CURRENT_TIMESTAMP WHERE order_id=ANY($1::uuid[]) AND status IN ('CREATED','PROCESSING')`,
+        [cancelledOrders.rows.map((row: { id: string }) => row.id)],
       );
       await pool.query(
         `UPDATE outbox_events SET processed_at=CURRENT_TIMESTAMP WHERE processed_at IS NULL AND available_at<=CURRENT_TIMESTAMP`,
@@ -23,6 +30,7 @@ else {
           {
             expiredOffers: expired.rowCount,
             releasedListings: released.rowCount,
+            cancelledOrders: cancelledOrders.rowCount,
           },
           "Offer expirations processed",
         );
