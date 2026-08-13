@@ -1,0 +1,102 @@
+previews:
+  generation: off
+
+databases:
+  - name: slabx-staging-db
+    plan: basic-256mb
+    region: oregon
+    postgresMajorVersion: "18"
+    databaseName: slabx_staging
+    user: slabx_staging
+    ipAllowList: []
+
+services:
+  - type: web
+    name: slabx-staging-api
+    runtime: docker
+    plan: starter
+    region: oregon
+    branch: main
+    dockerContext: .
+    dockerfilePath: ./apps/api/Dockerfile
+    healthCheckPath: /api/v1/health/ready
+    maxShutdownDelaySeconds: 15
+    preDeployCommand: pnpm --filter @slabx/database db:migrate:deploy
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PORT
+        value: "10000"
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: slabx-staging-db
+          property: connectionString
+      - key: WEB_ORIGIN
+        sync: false
+      - key: API_ORIGIN
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: PASSWORD_PEPPER
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: EMAIL_PROVIDER_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: SlabX <no-reply@accounts.slabxmarket.com>
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: EASYPOST_API_KEY
+        sync: false
+      - key: EASYPOST_WEBHOOK_SECRET
+        sync: false
+
+  - type: web
+    name: slabx-staging-web
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerContext: .
+    dockerfilePath: ./apps/web/Dockerfile
+    healthCheckPath: /health/live
+    envVars:
+      - key: API_HOSTPORT
+        fromService:
+          type: web
+          name: slabx-staging-api
+          property: hostport
+
+  - type: worker
+    name: slabx-staging-worker
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @slabx/worker... build
+    startCommand: pnpm --filter @slabx/worker start
+    maxShutdownDelaySeconds: 15
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: slabx-staging-db
+          property: connectionString

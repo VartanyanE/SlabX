@@ -57,6 +57,17 @@ else {
     }
   };
   await run();
-  setInterval(() => void run(), 30_000).unref();
+  const interval = setInterval(() => void run(), 30_000);
+  let shuttingDown = false;
+  const shutdown = async (signal: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    clearInterval(interval);
+    logger.info({ signal }, "Worker shutdown started");
+    await pool.end();
+    logger.info("Worker shutdown complete");
+  };
+  process.on("SIGTERM", () => void shutdown("SIGTERM"));
+  process.on("SIGINT", () => void shutdown("SIGINT"));
   logger.info("Offer expiration worker ready.");
 }
