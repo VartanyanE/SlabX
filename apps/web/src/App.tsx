@@ -26,6 +26,7 @@ import {
   SellerOnboardingPage,
 } from "./PaymentsPages";
 import { ModerationPage, ReputationPage } from "./TrustPages";
+import { RefundQueuePage, SellerBalancePage } from "./FinancialPages";
 
 function Home() {
   const health = useQuery({
@@ -160,6 +161,8 @@ export function App() {
           element={<ReputationPage />}
         />
         <Route path="/moderation" element={<ModerationPage />} />
+        <Route path="/financial" element={<RefundQueuePage />} />
+        <Route path="/seller/balance" element={<SellerBalancePage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <footer>

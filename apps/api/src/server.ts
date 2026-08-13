@@ -4,6 +4,9 @@ import { loadServerEnvironment } from "@slabx/config";
 import { createDatabaseHealthCheck, createDatabasePool } from "@slabx/database";
 import { createLogger } from "@slabx/observability";
 import { createApp } from "./app.js";
+import { FinancialRepository } from "./financial/repository.js";
+import { createFinancialRouter } from "./financial/routes.js";
+import { FinancialService } from "./financial/service.js";
 import { CatalogRepository } from "./catalog/repository.js";
 import { createCatalogRouter } from "./catalog/routes.js";
 import { CatalogService } from "./catalog/service.js";
@@ -89,17 +92,20 @@ const catalogRouter = createCatalogRouter({
       }
     : {}),
 });
-const paymentService =
+const paymentProvider =
   environment.STRIPE_SECRET_KEY && environment.STRIPE_WEBHOOK_SECRET
-    ? new PaymentService(
-        new PaymentRepository(databasePool),
-        new StripePaymentProvider(
-          environment.STRIPE_SECRET_KEY,
-          environment.STRIPE_WEBHOOK_SECRET,
-        ),
-        environment.WEB_ORIGIN,
+    ? new StripePaymentProvider(
+        environment.STRIPE_SECRET_KEY,
+        environment.STRIPE_WEBHOOK_SECRET,
       )
     : null;
+const paymentService = paymentProvider
+  ? new PaymentService(
+      new PaymentRepository(databasePool),
+      paymentProvider,
+      environment.WEB_ORIGIN,
+    )
+  : null;
 const shippingProvider = environment.EASYPOST_API_KEY
   ? new EasyPostShippingProvider(environment.EASYPOST_API_KEY)
   : new MockShippingProvider();
@@ -128,6 +134,17 @@ const app = createApp({
           identity: identityService,
         }),
         stripeWebhookHandlers: createStripeWebhookHandler(paymentService),
+      }
+    : {}),
+  ...(paymentProvider
+    ? {
+        financialRouter: createFinancialRouter({
+          service: new FinancialService(
+            new FinancialRepository(databasePool),
+            paymentProvider,
+          ),
+          identity: identityService,
+        }),
       }
     : {}),
   shippingRouter: createShippingRouter({

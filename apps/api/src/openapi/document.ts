@@ -406,6 +406,46 @@ export const openApiDocument = {
         204,
       ),
     },
+    "/refunds": {
+      get: operation(
+        "listMyRefunds",
+        "List refunds for order participants",
+        200,
+      ),
+      post: operation("requestRefund", "Request a bounded buyer refund", 201),
+    },
+    "/financial/refunds": {
+      get: operation("listRefundQueue", "List the staff refund queue", 200),
+    },
+    "/financial/overview": {
+      get: operation(
+        "getFinancialOverview",
+        "Read staff dispute, hold, and reconciliation metrics",
+        200,
+      ),
+    },
+    "/seller/financial-summary": {
+      get: operation(
+        "getSellerFinancialSummary",
+        "Read seller proceeds, holds, and payouts",
+        200,
+      ),
+    },
+    "/refunds/{refundId}/decision": {
+      parameters: [
+        {
+          name: "refundId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      post: operation(
+        "decideRefund",
+        "Approve or reject a refund request",
+        204,
+      ),
+    },
   },
 } as const;
 

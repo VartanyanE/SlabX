@@ -316,6 +316,104 @@ export class PaymentRepository {
           );
         }
       }
+      if (event.dispute?.paymentIntentId) {
+        const order = (
+          await client.query<{
+            id: string;
+            sellerId: string;
+            proceeds: number;
+          }>(
+            `SELECT o.id,o.seller_user_id AS "sellerId",o.seller_proceeds_minor::int AS proceeds
+             FROM orders o JOIN payment_attempts pa ON pa.order_id=o.id
+             WHERE pa.provider_payment_intent_id=$1 FOR UPDATE OF o`,
+            [event.dispute.paymentIntentId],
+          )
+        ).rows[0];
+        if (order) {
+          await client.query(
+            `INSERT INTO disputes (order_id,provider_dispute_id,provider_charge_id,amount_minor,currency,reason,status,evidence_due_at,closed_at)
+             VALUES ($1,$2,$3,$4,$5,$6,$7::"DisputeStatus",$8,CASE WHEN $7 IN ('WON','LOST') THEN CURRENT_TIMESTAMP END)
+             ON CONFLICT (provider_dispute_id) DO UPDATE SET status=EXCLUDED.status,reason=EXCLUDED.reason,evidence_due_at=EXCLUDED.evidence_due_at,
+               closed_at=CASE WHEN EXCLUDED.status IN ('WON','LOST') THEN CURRENT_TIMESTAMP ELSE disputes.closed_at END,updated_at=CURRENT_TIMESTAMP`,
+            [
+              order.id,
+              event.dispute.id,
+              event.dispute.chargeId,
+              event.dispute.amountMinor,
+              event.dispute.currency,
+              event.dispute.reason,
+              event.dispute.status,
+              event.dispute.evidenceDueAt,
+            ],
+          );
+          if (!["WON", "LOST"].includes(event.dispute.status))
+            await client.query(
+              `INSERT INTO payout_holds (order_id,seller_user_id,amount_minor,currency,reason_code)
+               SELECT $1,$2,$3,$4,'STRIPE_DISPUTE' WHERE NOT EXISTS (SELECT 1 FROM payout_holds WHERE order_id=$1 AND reason_code='STRIPE_DISPUTE' AND status='ACTIVE')`,
+              [
+                order.id,
+                order.sellerId,
+                Math.min(order.proceeds, event.dispute.amountMinor),
+                event.dispute.currency,
+              ],
+            );
+          else
+            await client.query(
+              `UPDATE payout_holds SET status=$2::"PayoutHoldStatus",released_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP
+               WHERE order_id=$1 AND reason_code='STRIPE_DISPUTE' AND status='ACTIVE'`,
+              [
+                order.id,
+                event.dispute.status === "WON" ? "RELEASED" : "CONSUMED",
+              ],
+            );
+        }
+      }
+      if (event.transfer) {
+        await client.query(
+          `INSERT INTO seller_transfers (order_id,provider_transfer_id,amount_minor,currency,status,idempotency_key)
+           SELECT o.id,$2,$3,$4,'SUCCEEDED',gen_random_uuid()
+           FROM orders o LEFT JOIN payment_attempts pa ON pa.order_id=o.id
+           WHERE pa.provider_payment_intent_id=$1 OR o.id=$5
+           ON CONFLICT (provider_transfer_id) DO UPDATE SET status='SUCCEEDED',updated_at=CURRENT_TIMESTAMP`,
+          [
+            event.transfer.paymentIntentId,
+            event.transfer.id,
+            event.transfer.amountMinor,
+            event.transfer.currency,
+            event.transfer.orderId,
+          ],
+        );
+        await client.query(
+          `INSERT INTO reconciliation_records (order_id,provider,provider_type,provider_id,amount_minor,currency,expected_minor,difference_minor)
+           SELECT o.id,'stripe','transfer',$2,$3,$4,o.seller_proceeds_minor,($3-o.seller_proceeds_minor)
+           FROM orders o LEFT JOIN payment_attempts pa ON pa.order_id=o.id WHERE pa.provider_payment_intent_id=$1 OR o.id=$5
+           ON CONFLICT (provider,provider_type,provider_id) DO UPDATE SET amount_minor=EXCLUDED.amount_minor,expected_minor=EXCLUDED.expected_minor,difference_minor=EXCLUDED.difference_minor,reconciled_at=CURRENT_TIMESTAMP`,
+          [
+            event.transfer.paymentIntentId,
+            event.transfer.id,
+            event.transfer.amountMinor,
+            event.transfer.currency,
+            event.transfer.orderId,
+          ],
+        );
+      }
+      if (event.payout) {
+        await client.query(
+          `INSERT INTO payout_records (connected_account_id,provider_payout_id,amount_minor,currency,status,arrival_at,failure_code,failure_message)
+           SELECT id,$2,$3,$4,$5::"PayoutStatus",$6,$7,$8 FROM connected_accounts WHERE provider_account_id=$1
+           ON CONFLICT (provider_payout_id) DO UPDATE SET status=EXCLUDED.status,arrival_at=EXCLUDED.arrival_at,failure_code=EXCLUDED.failure_code,failure_message=EXCLUDED.failure_message,updated_at=CURRENT_TIMESTAMP`,
+          [
+            event.payout.connectedAccountId,
+            event.payout.id,
+            event.payout.amountMinor,
+            event.payout.currency,
+            event.payout.status,
+            event.payout.arrivalAt,
+            event.payout.failureCode,
+            event.payout.failureMessage,
+          ],
+        );
+      }
       await client.query(
         `UPDATE webhook_inbox SET processed_at=CURRENT_TIMESTAMP WHERE provider='stripe' AND provider_event_id=$1`,
         [event.id],

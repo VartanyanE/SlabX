@@ -143,6 +143,46 @@ enum ModerationDecision {
   DISMISS
 }
 
+enum RefundStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
+enum DisputeStatus {
+  WARNING_NEEDS_RESPONSE
+  WARNING_UNDER_REVIEW
+  NEEDS_RESPONSE
+  UNDER_REVIEW
+  WON
+  LOST
+}
+
+enum TransferStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  REVERSED
+  FAILED
+}
+
+enum PayoutHoldStatus {
+  ACTIVE
+  RELEASED
+  CONSUMED
+}
+
+enum PayoutStatus {
+  PENDING
+  IN_TRANSIT
+  PAID
+  FAILED
+  CANCELED
+}
+
 model User {
   id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   emailNormalized String     @unique(map: "users_email_normalized_key") @map("email_normalized")
@@ -180,6 +220,8 @@ model User {
   reportsSubmitted Report[] @relation("ReportReporter")
   reportsAssigned Report[] @relation("ReportAssignee")
   moderationActions ModerationAction[]
+  refundRequests RefundRequest[] @relation("RefundRequester")
+  payoutHolds PayoutHold[] @relation("PayoutHoldSeller")
 
   @@index([status, createdAt])
   @@map("users")
@@ -571,8 +613,28 @@ model ConnectedAccount {
   updatedAt             DateTime               @updatedAt @map("updated_at") @db.Timestamptz(6)
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
   orders                Order[]
+  payouts               PayoutRecord[]
 
   @@map("connected_accounts")
+}
+
+model PayoutRecord {
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  connectedAccountId String       @map("connected_account_id") @db.Uuid
+  providerPayoutId   String       @unique @map("provider_payout_id")
+  amountMinor        BigInt       @map("amount_minor")
+  currency           String       @db.Char(3)
+  status             PayoutStatus
+  arrivalAt          DateTime?    @map("arrival_at") @db.Timestamptz(6)
+  failureCode        String?      @map("failure_code")
+  failureMessage     String?      @map("failure_message")
+  createdAt          DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  connectedAccount   ConnectedAccount @relation(fields: [connectedAccountId], references: [id], onDelete: Restrict)
+
+  @@index([connectedAccountId, createdAt(sort: Desc)])
+  @@index([status, arrivalAt])
+  @@map("payout_records")
 }
 
 model Order {
@@ -602,11 +664,116 @@ model Order {
   ledgerEntries      LedgerEntry[]
   shipment          Shipment?
   reviews           Review[]
+  refunds           RefundRequest[]
+  disputes          Dispute[]
+  transfers         SellerTransfer[]
+  payoutHolds       PayoutHold[]
+  reconciliationRecords ReconciliationRecord[]
 
   @@index([buyerUserId, createdAt(sort: Desc)])
   @@index([sellerUserId, createdAt(sort: Desc)])
   @@index([listingId, status])
   @@map("orders")
+}
+
+model RefundRequest {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId          String       @map("order_id") @db.Uuid
+  requesterUserId  String       @map("requester_user_id") @db.Uuid
+  amountMinor      BigInt       @map("amount_minor")
+  currency         String       @default("USD") @db.Char(3)
+  reasonCode       String       @map("reason_code")
+  details          String?
+  status           RefundStatus @default(REQUESTED)
+  providerRefundId String?      @unique @map("provider_refund_id")
+  idempotencyKey   String       @unique @map("idempotency_key") @db.Uuid
+  failureMessage   String?      @map("failure_message")
+  resolvedAt       DateTime?    @map("resolved_at") @db.Timestamptz(6)
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order            Order        @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  requester        User         @relation("RefundRequester", fields: [requesterUserId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+  @@index([status, createdAt])
+  @@map("refund_requests")
+}
+
+model Dispute {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId           String        @map("order_id") @db.Uuid
+  providerDisputeId String        @unique @map("provider_dispute_id")
+  providerChargeId  String        @map("provider_charge_id")
+  amountMinor       BigInt        @map("amount_minor")
+  currency          String        @db.Char(3)
+  reason            String
+  status            DisputeStatus
+  evidenceDueAt     DateTime?     @map("evidence_due_at") @db.Timestamptz(6)
+  closedAt          DateTime?     @map("closed_at") @db.Timestamptz(6)
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order             Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([status, evidenceDueAt])
+  @@index([orderId])
+  @@map("disputes")
+}
+
+model SellerTransfer {
+  id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId            String         @map("order_id") @db.Uuid
+  providerTransferId String?        @unique @map("provider_transfer_id")
+  amountMinor        BigInt         @map("amount_minor")
+  currency           String         @default("USD") @db.Char(3)
+  status             TransferStatus @default(PENDING)
+  idempotencyKey     String         @unique @map("idempotency_key") @db.Uuid
+  failureMessage     String?        @map("failure_message")
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order              Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+  @@index([status, createdAt])
+  @@map("seller_transfers")
+}
+
+model PayoutHold {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId       String           @map("order_id") @db.Uuid
+  sellerUserId  String           @map("seller_user_id") @db.Uuid
+  amountMinor   BigInt           @map("amount_minor")
+  currency      String           @default("USD") @db.Char(3)
+  reasonCode    String           @map("reason_code")
+  status        PayoutHoldStatus @default(ACTIVE)
+  releaseAt     DateTime?        @map("release_at") @db.Timestamptz(6)
+  releasedAt    DateTime?        @map("released_at") @db.Timestamptz(6)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order         Order            @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  seller        User             @relation("PayoutHoldSeller", fields: [sellerUserId], references: [id], onDelete: Restrict)
+
+  @@index([sellerUserId, status, releaseAt])
+  @@index([orderId])
+  @@map("payout_holds")
+}
+
+model ReconciliationRecord {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId        String?  @map("order_id") @db.Uuid
+  provider       String
+  providerType   String   @map("provider_type")
+  providerId     String   @map("provider_id")
+  amountMinor    BigInt   @map("amount_minor")
+  currency       String   @db.Char(3)
+  expectedMinor  BigInt   @map("expected_minor")
+  differenceMinor BigInt  @map("difference_minor")
+  reconciledAt   DateTime @default(now()) @map("reconciled_at") @db.Timestamptz(6)
+  metadata       Json     @default("{}")
+  order          Order?   @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@unique([provider, providerType, providerId])
+  @@index([differenceMinor, reconciledAt])
+  @@map("reconciliation_records")
 }
 
 model Review {

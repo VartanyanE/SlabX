@@ -34,6 +34,39 @@ export type PaymentEvent = {
     currency: string | null;
   };
   account?: ProviderAccount;
+  dispute?: {
+    id: string;
+    paymentIntentId: string | null;
+    chargeId: string;
+    amountMinor: number;
+    currency: string;
+    reason: string;
+    status:
+      | "WARNING_NEEDS_RESPONSE"
+      | "WARNING_UNDER_REVIEW"
+      | "NEEDS_RESPONSE"
+      | "UNDER_REVIEW"
+      | "WON"
+      | "LOST";
+    evidenceDueAt: Date | null;
+  };
+  transfer?: {
+    id: string;
+    paymentIntentId: string;
+    amountMinor: number;
+    currency: string;
+    orderId: string | null;
+  };
+  payout?: {
+    id: string;
+    connectedAccountId: string;
+    amountMinor: number;
+    currency: string;
+    status: "PENDING" | "IN_TRANSIT" | "PAID" | "FAILED" | "CANCELED";
+    arrivalAt: Date | null;
+    failureCode: string | null;
+    failureMessage: string | null;
+  };
 };
 
 export interface PaymentProvider {
@@ -48,6 +81,11 @@ export interface PaymentProvider {
     request: CheckoutRequest,
   ): Promise<{ id: string; url: string }>;
   parseWebhook(payload: Buffer, signature: string): PaymentEvent;
+  createRefund?(request: {
+    paymentIntentId: string;
+    amountMinor: number;
+    idempotencyKey: string;
+  }): Promise<{ id: string; status: string }>;
 }
 
 export class StripePaymentProvider implements PaymentProvider {
@@ -168,7 +206,114 @@ export class StripePaymentProvider implements PaymentProvider {
         account: accountShape(event.data.object),
       };
     }
+    if (
+      event.type === "charge.dispute.created" ||
+      event.type === "charge.dispute.updated" ||
+      event.type === "charge.dispute.closed"
+    ) {
+      const dispute = event.data.object;
+      return {
+        id: event.id,
+        type: event.type,
+        payload: event,
+        dispute: {
+          id: dispute.id,
+          paymentIntentId:
+            typeof dispute.payment_intent === "string"
+              ? dispute.payment_intent
+              : (dispute.payment_intent?.id ?? null),
+          chargeId:
+            typeof dispute.charge === "string"
+              ? dispute.charge
+              : dispute.charge.id,
+          amountMinor: dispute.amount,
+          currency: dispute.currency.toUpperCase(),
+          reason: dispute.reason,
+          status: dispute.status.toUpperCase() as NonNullable<
+            PaymentEvent["dispute"]
+          >["status"],
+          evidenceDueAt: dispute.evidence_details.due_by
+            ? new Date(dispute.evidence_details.due_by * 1000)
+            : null,
+        },
+      };
+    }
+    if (event.type === "charge.succeeded") {
+      const charge = event.data.object;
+      const transferId =
+        typeof charge.transfer === "string"
+          ? charge.transfer
+          : charge.transfer?.id;
+      const paymentIntentId =
+        typeof charge.payment_intent === "string"
+          ? charge.payment_intent
+          : charge.payment_intent?.id;
+      if (transferId && paymentIntentId)
+        return {
+          id: event.id,
+          type: event.type,
+          payload: event,
+          transfer: {
+            id: transferId,
+            paymentIntentId,
+            amountMinor: charge.amount - (charge.application_fee_amount ?? 0),
+            currency: charge.currency.toUpperCase(),
+            orderId: charge.metadata.orderId ?? null,
+          },
+        };
+    }
+    if (
+      [
+        "payout.created",
+        "payout.updated",
+        "payout.paid",
+        "payout.failed",
+        "payout.canceled",
+      ].includes(event.type)
+    ) {
+      const payout = event.data.object as Stripe.Payout;
+      const connectedAccountId =
+        typeof event.account === "string" ? event.account : null;
+      if (connectedAccountId)
+        return {
+          id: event.id,
+          type: event.type,
+          payload: event,
+          payout: {
+            id: payout.id,
+            connectedAccountId,
+            amountMinor: payout.amount,
+            currency: payout.currency.toUpperCase(),
+            status: payout.status.toUpperCase() as NonNullable<
+              PaymentEvent["payout"]
+            >["status"],
+            arrivalAt: payout.arrival_date
+              ? new Date(payout.arrival_date * 1000)
+              : null,
+            failureCode: payout.failure_code ?? null,
+            failureMessage: payout.failure_message ?? null,
+          },
+        };
+    }
     return { id: event.id, type: event.type, payload: event };
+  }
+
+  async createRefund(request: {
+    paymentIntentId: string;
+    amountMinor: number;
+    idempotencyKey: string;
+  }) {
+    const refund = await this.stripe.refunds.create(
+      {
+        payment_intent: request.paymentIntentId,
+        amount: request.amountMinor,
+        reverse_transfer: true,
+        refund_application_fee: true,
+        metadata: { platform: "slabx" },
+      },
+      { idempotencyKey: request.idempotencyKey },
+    );
+    return { id: refund.id, status: refund.status ?? "pending" };
   }
 }
 

@@ -1005,6 +1005,81 @@
           }
         }
       }
+    },
+    "/refunds": {
+      "get": {
+        "operationId": "listMyRefunds",
+        "summary": "List refunds for order participants",
+        "responses": {
+          "200": {
+            "description": "List refunds for order participants"
+          }
+        }
+      },
+      "post": {
+        "operationId": "requestRefund",
+        "summary": "Request a bounded buyer refund",
+        "responses": {
+          "201": {
+            "description": "Request a bounded buyer refund"
+          }
+        }
+      }
+    },
+    "/financial/refunds": {
+      "get": {
+        "operationId": "listRefundQueue",
+        "summary": "List the staff refund queue",
+        "responses": {
+          "200": {
+            "description": "List the staff refund queue"
+          }
+        }
+      }
+    },
+    "/financial/overview": {
+      "get": {
+        "operationId": "getFinancialOverview",
+        "summary": "Read staff dispute, hold, and reconciliation metrics",
+        "responses": {
+          "200": {
+            "description": "Read staff dispute, hold, and reconciliation metrics"
+          }
+        }
+      }
+    },
+    "/seller/financial-summary": {
+      "get": {
+        "operationId": "getSellerFinancialSummary",
+        "summary": "Read seller proceeds, holds, and payouts",
+        "responses": {
+          "200": {
+            "description": "Read seller proceeds, holds, and payouts"
+          }
+        }
+      }
+    },
+    "/refunds/{refundId}/decision": {
+      "parameters": [
+        {
+          "name": "refundId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "decideRefund",
+        "summary": "Approve or reject a refund request",
+        "responses": {
+          "204": {
+            "description": "Approve or reject a refund request"
+          }
+        }
+      }
     }
   }
 }
