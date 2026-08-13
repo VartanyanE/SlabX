@@ -29,5 +29,8 @@ describe("App", () => {
       screen.getByRole("heading", { name: /great cards deserve/i }),
     ).toBeInTheDocument();
     expect(await screen.findByText("Platform online")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Skip to main content" }),
+    ).toHaveAttribute("href", "#main-content");
   });
 });

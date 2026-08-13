@@ -374,6 +374,7 @@ model AuditEvent {
 
   @@index([actorUserId, createdAt])
   @@index([action, createdAt])
+  @@index([targetType, targetId, createdAt])
   @@map("audit_events")
 }
 
@@ -773,6 +774,7 @@ model ReconciliationRecord {
 
   @@unique([provider, providerType, providerId])
   @@index([differenceMinor, reconciledAt])
+  @@index([reconciledAt])
   @@map("reconciliation_records")
 }
 

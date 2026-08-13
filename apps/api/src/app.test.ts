@@ -68,3 +68,32 @@ describe("Stripe webhook transport", () => {
     expect(received).toEqual(Buffer.from(payload));
   });
 });
+
+describe("launch hardening", () => {
+  it("sets security and request correlation headers", async () => {
+    const app = createApp({
+      databaseHealthCheck: async () => undefined,
+      logger,
+      webOrigin: "http://localhost:5173",
+    });
+    const response = await request(app).get("/api/v1/openapi.json").expect(200);
+    expect(response.headers["x-content-type-options"]).toBe("nosniff");
+    expect(response.headers["x-request-id"]).toBeTruthy();
+  });
+
+  it("returns a stable error envelope when the API limit is exceeded", async () => {
+    const app = createApp({
+      databaseHealthCheck: async () => undefined,
+      logger,
+      webOrigin: "http://localhost:5173",
+      rateLimitMax: 1,
+      rateLimitWindowMs: 60_000,
+    });
+    await request(app).get("/api/v1/openapi.json").expect(200);
+    const response = await request(app).get("/api/v1/openapi.json").expect(429);
+    expect(response.body).toMatchObject({
+      error: { code: "RATE_LIMITED" },
+    });
+    expect(response.headers["ratelimit"]).toBeTruthy();
+  });
+});

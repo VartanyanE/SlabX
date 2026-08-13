@@ -114,7 +114,7 @@ const shippingService = new ShippingService(
   shippingProvider,
 );
 const app = createApp({
-  databaseHealthCheck: createDatabaseHealthCheck(environment.DATABASE_URL),
+  databaseHealthCheck: createDatabaseHealthCheck(databasePool),
   logger,
   webOrigin: environment.WEB_ORIGIN,
   identityRouter,
@@ -163,21 +163,41 @@ const app = createApp({
         ),
       }
     : {}),
+  rateLimitWindowMs: environment.API_RATE_LIMIT_WINDOW_MS,
+  rateLimitMax: environment.API_RATE_LIMIT_MAX,
+  trustProxy: environment.NODE_ENV === "production",
 });
 
 const server = app.listen(environment.API_PORT, () => {
   logger.info({ port: environment.API_PORT }, "SlabX API listening");
 });
+server.requestTimeout = environment.API_REQUEST_TIMEOUT_MS;
+server.headersTimeout = environment.API_REQUEST_TIMEOUT_MS + 1_000;
+server.keepAliveTimeout = 5_000;
 
-function shutdown(signal: string) {
+let shuttingDown = false;
+async function shutdown(signal: string) {
+  if (shuttingDown) return;
+  shuttingDown = true;
   logger.info({ signal }, "Graceful shutdown started");
-  server.close((error) => {
-    if (error) {
-      logger.error({ err: error }, "Graceful shutdown failed");
-      process.exitCode = 1;
-    }
-  });
+  const forcedShutdown = setTimeout(() => {
+    logger.error("Graceful shutdown deadline exceeded");
+    server.closeAllConnections();
+    process.exitCode = 1;
+  }, 10_000);
+  forcedShutdown.unref();
+  try {
+    await new Promise<void>((resolveClose, rejectClose) =>
+      server.close((error) => (error ? rejectClose(error) : resolveClose())),
+    );
+    await databasePool.end();
+    clearTimeout(forcedShutdown);
+    logger.info("Graceful shutdown complete");
+  } catch (error) {
+    logger.error({ err: error }, "Graceful shutdown failed");
+    process.exitCode = 1;
+  }
 }
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+process.on("SIGINT", () => void shutdown("SIGINT"));

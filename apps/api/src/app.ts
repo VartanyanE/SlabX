@@ -7,6 +7,7 @@ import express, {
   type Router,
 } from "express";
 import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
 import { pinoHttp } from "pino-http";
 import type { Logger } from "pino";
 import { healthStatusSchema } from "@slabx/contracts";
@@ -29,6 +30,9 @@ type AppDependencies = {
   financialRouter?: Router;
   stripeWebhookHandlers?: RequestHandler[];
   easyPostWebhookHandlers?: RequestHandler[];
+  rateLimitWindowMs?: number;
+  rateLimitMax?: number;
+  trustProxy?: boolean;
 };
 
 export function createApp({
@@ -47,9 +51,13 @@ export function createApp({
   financialRouter,
   stripeWebhookHandlers,
   easyPostWebhookHandlers,
+  rateLimitWindowMs = 60_000,
+  rateLimitMax = 120,
+  trustProxy = false,
 }: AppDependencies): Express {
   const app = express();
   app.disable("x-powered-by");
+  if (trustProxy) app.set("trust proxy", 1);
   app.use(helmet());
   app.use(cors({ origin: webOrigin, credentials: true }));
   app.use(
@@ -67,6 +75,25 @@ export function createApp({
     app.post("/api/v1/payments/stripe/webhook", ...stripeWebhookHandlers);
   if (easyPostWebhookHandlers)
     app.post("/api/v1/shipping/easypost/webhook", ...easyPostWebhookHandlers);
+  app.use(
+    "/api/v1",
+    rateLimit({
+      windowMs: rateLimitWindowMs,
+      limit: rateLimitMax,
+      standardHeaders: "draft-8",
+      legacyHeaders: false,
+      skip: (request) => request.path.startsWith("/health/"),
+      handler: (request, response) => {
+        response.status(429).json({
+          error: {
+            code: "RATE_LIMITED",
+            message: "Too many requests. Please wait and try again.",
+            requestId: request.id,
+          },
+        });
+      },
+    }),
+  );
   app.use(express.json({ limit: "1mb" }));
 
   const live: RequestHandler = (_request, response) => {

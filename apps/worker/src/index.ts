@@ -25,14 +25,32 @@ else {
       await pool.query(
         `UPDATE outbox_events SET processed_at=CURRENT_TIMESTAMP WHERE processed_at IS NULL AND available_at<=CURRENT_TIMESTAMP`,
       );
-      if (expired.rowCount || released.rowCount)
+      const expiredSessions = await pool.query(
+        `DELETE FROM sessions WHERE expires_at < CURRENT_TIMESTAMP - INTERVAL '30 days'`,
+      );
+      const expiredTokens = await pool.query(
+        `DELETE FROM email_tokens WHERE (consumed_at IS NOT NULL OR expires_at < CURRENT_TIMESTAMP) AND created_at < CURRENT_TIMESTAMP - INTERVAL '7 days'`,
+      );
+      const redactedWebhooks = await pool.query(
+        `UPDATE webhook_inbox SET payload='{}'::jsonb WHERE processed_at IS NOT NULL AND processed_at < CURRENT_TIMESTAMP - INTERVAL '90 days' AND payload <> '{}'::jsonb`,
+      );
+      if (
+        expired.rowCount ||
+        released.rowCount ||
+        expiredSessions.rowCount ||
+        expiredTokens.rowCount ||
+        redactedWebhooks.rowCount
+      )
         logger.info(
           {
             expiredOffers: expired.rowCount,
             releasedListings: released.rowCount,
             cancelledOrders: cancelledOrders.rowCount,
+            expiredSessions: expiredSessions.rowCount,
+            expiredTokens: expiredTokens.rowCount,
+            redactedWebhooks: redactedWebhooks.rowCount,
           },
-          "Offer expirations processed",
+          "Scheduled maintenance processed",
         );
     } catch (error) {
       logger.error({ err: error }, "Offer expiration worker failed");

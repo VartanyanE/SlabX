@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { NavLink, Route, Routes } from "react-router";
 import { getApiHealth } from "./api/client";
 import {
@@ -117,9 +118,33 @@ function NotFound() {
   );
 }
 
+function ConnectivityStatus() {
+  const [online, setOnline] = useState(() => navigator.onLine);
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
+  if (online) return null;
+  return (
+    <div className="connectivity-banner" role="status">
+      You’re offline. Existing information remains visible; changes will resume
+      when your connection returns.
+    </div>
+  );
+}
+
 export function App() {
   return (
     <div className="page-shell">
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
+      <ConnectivityStatus />
       <header className="site-header">
         <NavLink className="brand" to="/" aria-label="SlabX home">
           <span className="brand-mark">S</span>
