@@ -38,6 +38,7 @@ SlabX will launch with basketball, baseball, football, and Pokémon cards while 
 | [Testing](docs/TESTING.md) | Unit, API, integration, E2E, CI quality gates |
 | [Production runbook](docs/PRODUCTION_RUNBOOK.md) | SLOs, incident response, rollback, backup, provider degradation |
 | [Launch checklist](docs/LAUNCH_CHECKLIST.md) | Engineering, operations, security, legal, and go/no-go gates |
+| [Staging deployment](docs/STAGING_DEPLOYMENT.md) | Render Blueprint, provider callbacks, and release verification |
 | [Roadmap](docs/ROADMAP.md) | Phased milestones and definitions of done |
 | [Development](docs/DEVELOPMENT.md) | Local/staging/production workflow and Git conventions |
 | [Decisions](docs/DECISIONS.md) | Architecture Decision Record log and open decisions |
