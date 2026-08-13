@@ -165,7 +165,7 @@ export function createIdentityRouter(options: {
   router.get("/auth/google/callback", authLimit, async (req, res) => {
     try {
       const identity = await options.google.callback(
-        new URL(req.originalUrl, req.protocol + "://" + req.get("host")),
+        new URL(req.originalUrl, options.webOrigin),
         req.cookies[GOOGLE_FLOW_COOKIE],
       );
       const result = await options.service.loginWithGoogle(
