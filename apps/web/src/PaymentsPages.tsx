@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, useEffect } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router";
 import { paymentApi } from "./api/payments";
 
@@ -238,6 +238,7 @@ export function OrdersPage() {
 export function OrderDetailPage() {
   const { orderId = "" } = useParams();
   const client = useQueryClient();
+  const [reviewed, setReviewed] = useState(false);
   const order = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => paymentApi.order(orderId),
@@ -261,6 +262,19 @@ export function OrderDetailPage() {
     mutationFn: (rateId: string) => paymentApi.buyLabel(orderId, rateId),
     onSuccess: (value) => client.setQueryData(["shipment", orderId], value),
   });
+  const review = useMutation({
+    mutationFn: (input: { rating: number; comment: string }) =>
+      paymentApi.review(orderId, input.rating, input.comment),
+    onSuccess: () => setReviewed(true),
+  });
+  function submitReview(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    review.mutate({
+      rating: Number(data.get("rating")),
+      comment: String(data.get("comment") ?? ""),
+    });
+  }
   if (order.isError) return <Navigate to="/login" replace />;
   const item = order.data?.item;
   const currentShipment = shipment.data;
@@ -355,6 +369,44 @@ export function OrderDetailPage() {
           </>
         )}
       </section>
+      {currentShipment?.status === "DELIVERED" && (
+        <section className="account-card payment-card trust-card">
+          <p className="section-kicker">TRANSACTION REVIEW</p>
+          {reviewed ? (
+            <>
+              <h2>Thank you for reviewing this transaction.</h2>
+              <p>Your verified rating now contributes to marketplace trust.</p>
+            </>
+          ) : (
+            <form className="auth-form" onSubmit={submitReview}>
+              <h2>How was your experience?</h2>
+              <label>
+                Rating
+                <select name="rating" defaultValue="5" required>
+                  <option value="5">5 — Excellent</option>
+                  <option value="4">4 — Good</option>
+                  <option value="3">3 — Fair</option>
+                  <option value="2">2 — Poor</option>
+                  <option value="1">1 — Very poor</option>
+                </select>
+              </label>
+              <label>
+                Comment (optional)
+                <textarea name="comment" maxLength={1000} rows={4} />
+              </label>
+              {review.error && (
+                <p className="form-error">{review.error.message}</p>
+              )}
+              <button
+                className="button button-primary"
+                disabled={review.isPending}
+              >
+                Submit verified review
+              </button>
+            </form>
+          )}
+        </section>
+      )}
     </main>
   );
 }

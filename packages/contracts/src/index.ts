@@ -397,6 +397,65 @@ export type Shipment = {
   events: TrackingEvent[];
 };
 
+export const reviewInputSchema = z.object({
+  orderId: z.uuid(),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().trim().min(1).max(1000).nullable().optional(),
+});
+export const reportInputSchema = z.object({
+  targetType: z.enum(["USER", "REVIEW", "LISTING"]),
+  targetId: z.string().trim().min(1).max(100),
+  reasonCode: z.enum([
+    "HARASSMENT",
+    "FRAUD",
+    "COUNTERFEIT",
+    "SPAM",
+    "PRIVACY",
+    "OTHER",
+  ]),
+  details: z.string().trim().min(1).max(2000).nullable().optional(),
+});
+export const moderationActionSchema = z.object({
+  decision: z.enum([
+    "ASSIGN",
+    "HIDE_REVIEW",
+    "RESTORE_REVIEW",
+    "RESOLVE",
+    "DISMISS",
+  ]),
+  note: z.string().trim().min(1).max(2000).nullable().optional(),
+});
+export type ReviewInput = z.infer<typeof reviewInputSchema>;
+export type ReportInput = z.infer<typeof reportInputSchema>;
+export type ModerationActionInput = z.infer<typeof moderationActionSchema>;
+export type TrustSummary = {
+  userId: string;
+  ratingAverage: number | null;
+  ratingCount: number;
+  ratingBreakdown: Record<"1" | "2" | "3" | "4" | "5", number>;
+};
+export type PublicReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  role: "BUYER_REVIEWING_SELLER" | "SELLER_REVIEWING_BUYER";
+  createdAt: string;
+  verifiedTransaction: true;
+};
+export type TrustProfile = {
+  summary: TrustSummary;
+  reviews: PublicReview[];
+};
+export type ModerationReport = {
+  id: string;
+  targetType: string;
+  targetId: string;
+  reasonCode: string;
+  details: string | null;
+  status: "OPEN" | "IN_REVIEW" | "RESOLVED" | "DISMISSED";
+  createdAt: string;
+};
+
 export type CheckoutSession = {
   order: Order;
   checkoutUrl: string;

@@ -25,6 +25,7 @@ import {
   OrderDetailPage,
   SellerOnboardingPage,
 } from "./PaymentsPages";
+import { ModerationPage, ReputationPage } from "./TrustPages";
 
 function Home() {
   const health = useQuery({
@@ -154,6 +155,11 @@ export function App() {
         <Route path="/checkout/:listingId" element={<CheckoutPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+        <Route
+          path="/profiles/:userId/reputation"
+          element={<ReputationPage />}
+        />
+        <Route path="/moderation" element={<ModerationPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <footer>
