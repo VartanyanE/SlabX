@@ -25,6 +25,7 @@ type AppDependencies = {
   offerRouter?: Router;
   paymentRouter?: Router;
   shippingRouter?: Router;
+  trustRouter?: Router;
   stripeWebhookHandlers?: RequestHandler[];
   easyPostWebhookHandlers?: RequestHandler[];
 };
@@ -41,6 +42,7 @@ export function createApp({
   offerRouter,
   paymentRouter,
   shippingRouter,
+  trustRouter,
   stripeWebhookHandlers,
   easyPostWebhookHandlers,
 }: AppDependencies): Express {
@@ -109,6 +111,7 @@ export function createApp({
   if (offerRouter) app.use("/api/v1", offerRouter);
   if (paymentRouter) app.use("/api/v1", paymentRouter);
   if (shippingRouter) app.use("/api/v1", shippingRouter);
+  if (trustRouter) app.use("/api/v1", trustRouter);
 
   app.use((_request, response) => {
     response.status(404).json({

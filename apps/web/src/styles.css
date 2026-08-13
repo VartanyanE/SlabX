@@ -682,6 +682,58 @@ details summary {
 .fulfillment-card {
   max-width: 680px;
 }
+
+.trust-card {
+  margin-top: var(--space-5);
+}
+
+.trust-card textarea,
+.trust-card select {
+  width: 100%;
+}
+
+.trust-page .rating-breakdown,
+.review-list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.rating-breakdown > div {
+  display: grid;
+  grid-template-columns: 4rem 1fr 2rem;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.rating-breakdown progress {
+  width: 100%;
+}
+.review-list {
+  margin-top: var(--space-5);
+}
+.review-list article {
+  display: grid;
+  gap: var(--space-3);
+}
+.report-flow {
+  margin-top: var(--space-3);
+}
+.report-flow form {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.report-flow label {
+  display: grid;
+  gap: var(--space-2);
+}
+.report-flow textarea,
+.report-flow select {
+  width: 100%;
+}
+.report-success {
+  color: var(--color-success, #167348);
+}
 .shipping-rate {
   width: 100%;
   display: flex;

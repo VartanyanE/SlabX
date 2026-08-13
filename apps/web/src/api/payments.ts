@@ -62,4 +62,9 @@ export const paymentApi = {
       method: "POST",
       body: JSON.stringify({ rateId, idempotencyKey: crypto.randomUUID() }),
     }),
+  review: (orderId: string, rating: number, comment: string) =>
+    api<unknown>("/reviews", {
+      method: "POST",
+      body: JSON.stringify({ orderId, rating, comment: comment || null }),
+    }),
 };

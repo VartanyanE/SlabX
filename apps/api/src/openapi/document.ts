@@ -355,6 +355,57 @@ export const openApiDocument = {
         200,
       ),
     },
+    "/reviews": {
+      post: operation(
+        "createReview",
+        "Create a delivered-transaction review",
+        201,
+      ),
+    },
+    "/profiles/{userId}/trust": {
+      parameters: [
+        {
+          name: "userId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      get: operation(
+        "getTrustProfile",
+        "Read public verified reputation and reviews",
+        200,
+      ),
+    },
+    "/reports": {
+      post: operation(
+        "createReport",
+        "Report marketplace content or conduct",
+        201,
+      ),
+    },
+    "/moderation/reports": {
+      get: operation(
+        "listModerationReports",
+        "List reports for moderators",
+        200,
+      ),
+    },
+    "/moderation/reports/{reportId}/actions": {
+      parameters: [
+        {
+          name: "reportId",
+          in: "path",
+          required: true,
+          schema: { type: "string", format: "uuid" },
+        },
+      ],
+      post: operation(
+        "moderateReport",
+        "Record an audited moderator action",
+        204,
+      ),
+    },
   },
 } as const;
 

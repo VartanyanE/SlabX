@@ -36,6 +36,9 @@ import { ShippingRepository } from "./shipping/repository.js";
 import { createShippingRouter } from "./shipping/routes.js";
 import { createEasyPostWebhookHandler } from "./shipping/routes.js";
 import { ShippingService } from "./shipping/service.js";
+import { TrustRepository } from "./trust/repository.js";
+import { createTrustRouter } from "./trust/routes.js";
+import { TrustService } from "./trust/service.js";
 
 loadDotenv({ path: resolve(process.cwd(), "../../.env"), quiet: true });
 const environment = loadServerEnvironment(process.env);
@@ -129,6 +132,10 @@ const app = createApp({
     : {}),
   shippingRouter: createShippingRouter({
     service: shippingService,
+    identity: identityService,
+  }),
+  trustRouter: createTrustRouter({
+    service: new TrustService(new TrustRepository(databasePool)),
     identity: identityService,
   }),
   ...(environment.EASYPOST_WEBHOOK_SECRET

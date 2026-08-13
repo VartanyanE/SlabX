@@ -5,6 +5,7 @@ import type { CollectionItem, Listing } from "@slabx/contracts";
 import { catalogApi } from "./api/catalog";
 import { listingApi } from "./api/listings";
 import { offerApi } from "./api/offers";
+import { ReportForm } from "./TrustPages";
 
 const money = (minor: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
@@ -150,7 +151,15 @@ export function ListingDetailPage() {
           </strong>
           <p>{value.conditionDisclosure}</p>
           <p>
-            Sold by <strong>@{value.seller.handle}</strong>
+            Sold by{" "}
+            <Link to={`/profiles/${value.seller.id}/reputation`}>
+              <strong>@{value.seller.handle}</strong>
+            </Link>{" "}
+            {value.seller.ratingCount > 0 && (
+              <span>
+                ★ {value.seller.ratingAverage} ({value.seller.ratingCount})
+              </span>
+            )}
           </p>
           <button
             className="button button-primary"
@@ -167,6 +176,7 @@ export function ListingDetailPage() {
             </Link>
           )}
           {value.acceptsOffers && <MakeOffer listingId={value.id} />}
+          <ReportForm targetType="LISTING" targetId={value.id} />
         </aside>
       </section>
     </main>

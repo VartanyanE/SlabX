@@ -123,6 +123,26 @@ enum ShipmentStatus {
   EXCEPTION
 }
 
+enum ReviewRole {
+  BUYER_REVIEWING_SELLER
+  SELLER_REVIEWING_BUYER
+}
+
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum ModerationDecision {
+  ASSIGN
+  HIDE_REVIEW
+  RESTORE_REVIEW
+  RESOLVE
+  DISMISS
+}
+
 model User {
   id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   emailNormalized String     @unique(map: "users_email_normalized_key") @map("email_normalized")
@@ -155,6 +175,11 @@ model User {
   buyerOrders Order[] @relation("OrderBuyer")
   sellerOrders Order[] @relation("OrderSeller")
   paymentAttempts PaymentAttempt[]
+  reviewsAuthored Review[] @relation("ReviewAuthor")
+  reviewsReceived Review[] @relation("ReviewSubject")
+  reportsSubmitted Report[] @relation("ReportReporter")
+  reportsAssigned Report[] @relation("ReportAssignee")
+  moderationActions ModerationAction[]
 
   @@index([status, createdAt])
   @@map("users")
@@ -576,11 +601,70 @@ model Order {
   paymentAttempts    PaymentAttempt[]
   ledgerEntries      LedgerEntry[]
   shipment          Shipment?
+  reviews           Review[]
 
   @@index([buyerUserId, createdAt(sort: Desc)])
   @@index([sellerUserId, createdAt(sort: Desc)])
   @@index([listingId, status])
   @@map("orders")
+}
+
+model Review {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId       String     @map("order_id") @db.Uuid
+  authorUserId  String     @map("author_user_id") @db.Uuid
+  subjectUserId String     @map("subject_user_id") @db.Uuid
+  role          ReviewRole
+  rating        Int
+  comment       String?
+  publishedAt   DateTime?  @map("published_at") @db.Timestamptz(6)
+  hiddenAt      DateTime?  @map("hidden_at") @db.Timestamptz(6)
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order         Order      @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  author        User       @relation("ReviewAuthor", fields: [authorUserId], references: [id], onDelete: Restrict)
+  subject       User       @relation("ReviewSubject", fields: [subjectUserId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, authorUserId])
+  @@index([subjectUserId, hiddenAt, createdAt(sort: Desc)])
+  @@map("reviews")
+}
+
+model Report {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reporterUserId String       @map("reporter_user_id") @db.Uuid
+  assignedUserId String?      @map("assigned_user_id") @db.Uuid
+  targetType     String       @map("target_type")
+  targetId       String       @map("target_id")
+  reasonCode     String       @map("reason_code")
+  details        String?
+  status         ReportStatus @default(OPEN)
+  resolutionNote String?      @map("resolution_note")
+  resolvedAt     DateTime?    @map("resolved_at") @db.Timestamptz(6)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  reporter       User         @relation("ReportReporter", fields: [reporterUserId], references: [id], onDelete: Restrict)
+  assignedUser   User?        @relation("ReportAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  actions        ModerationAction[]
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@map("reports")
+}
+
+model ModerationAction {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reportId    String             @map("report_id") @db.Uuid
+  actorUserId String             @map("actor_user_id") @db.Uuid
+  decision    ModerationDecision
+  note        String?
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  report      Report             @relation(fields: [reportId], references: [id], onDelete: Restrict)
+  actor       User               @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([reportId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@map("moderation_actions")
 }
 
 model Shipment {

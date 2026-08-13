@@ -928,6 +928,83 @@
           }
         }
       }
+    },
+    "/reviews": {
+      "post": {
+        "operationId": "createReview",
+        "summary": "Create a delivered-transaction review",
+        "responses": {
+          "201": {
+            "description": "Create a delivered-transaction review"
+          }
+        }
+      }
+    },
+    "/profiles/{userId}/trust": {
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getTrustProfile",
+        "summary": "Read public verified reputation and reviews",
+        "responses": {
+          "200": {
+            "description": "Read public verified reputation and reviews"
+          }
+        }
+      }
+    },
+    "/reports": {
+      "post": {
+        "operationId": "createReport",
+        "summary": "Report marketplace content or conduct",
+        "responses": {
+          "201": {
+            "description": "Report marketplace content or conduct"
+          }
+        }
+      }
+    },
+    "/moderation/reports": {
+      "get": {
+        "operationId": "listModerationReports",
+        "summary": "List reports for moderators",
+        "responses": {
+          "200": {
+            "description": "List reports for moderators"
+          }
+        }
+      }
+    },
+    "/moderation/reports/{reportId}/actions": {
+      "parameters": [
+        {
+          "name": "reportId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "moderateReport",
+        "summary": "Record an audited moderator action",
+        "responses": {
+          "204": {
+            "description": "Record an audited moderator action"
+          }
+        }
+      }
     }
   }
 }
