@@ -223,6 +223,7 @@ export function OrdersPage() {
               </p>
               <strong>{money(order.subtotalMinor)}</strong>
               <small>{order.orderNumber}</small>
+              <Link to={`/orders/${order.id}`}>View fulfillment</Link>
             </div>
           </article>
         ))}
@@ -230,6 +231,130 @@ export function OrdersPage() {
       {orders.data?.length === 0 && (
         <p className="empty-state">No orders yet.</p>
       )}
+    </main>
+  );
+}
+
+export function OrderDetailPage() {
+  const { orderId = "" } = useParams();
+  const client = useQueryClient();
+  const order = useQuery({
+    queryKey: ["order", orderId],
+    queryFn: () => paymentApi.order(orderId),
+    retry: false,
+  });
+  const shipment = useQuery({
+    queryKey: ["shipment", orderId],
+    queryFn: () => paymentApi.shipment(orderId),
+    retry: false,
+  });
+  const rates = useMutation({
+    mutationFn: () =>
+      paymentApi.shippingRates(orderId, {
+        lengthInches: 8,
+        widthInches: 6,
+        heightInches: 1,
+        weightOunces: 8,
+      }),
+  });
+  const label = useMutation({
+    mutationFn: (rateId: string) => paymentApi.buyLabel(orderId, rateId),
+    onSuccess: (value) => client.setQueryData(["shipment", orderId], value),
+  });
+  if (order.isError) return <Navigate to="/login" replace />;
+  const item = order.data?.item;
+  const currentShipment = shipment.data;
+  return (
+    <main id="main-content" className="catalog-page payment-page">
+      <header className="catalog-heading">
+        <p className="section-kicker">ORDER FULFILLMENT</p>
+        <h1>{item?.playerOrCharacter ?? "Order"}</h1>
+        <p>{order.data?.orderNumber}</p>
+      </header>
+      <section className="account-card payment-card fulfillment-card">
+        <span className="payment-status">
+          {currentShipment?.status.replaceAll("_", " ") ?? "AWAITING SHIPMENT"}
+        </span>
+        {currentShipment ? (
+          <>
+            <h2>
+              {currentShipment.carrier} {currentShipment.service}
+            </h2>
+            <p>{currentShipment.trackingCode}</p>
+            <div className="tracking-timeline">
+              {currentShipment.events.map((event) => (
+                <div key={event.id}>
+                  <span aria-hidden="true" />
+                  <p>
+                    <strong>{event.description}</strong>
+                    <small>{new Date(event.occurredAt).toLocaleString()}</small>
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="fulfillment-actions">
+              {currentShipment.labelUrl && (
+                <a
+                  className="button button-secondary"
+                  href={currentShipment.labelUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Print test label
+                </a>
+              )}
+              {currentShipment.trackingUrl && (
+                <a
+                  className="button button-primary"
+                  href={currentShipment.trackingUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Track package
+                </a>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <h2>Prepare this card for shipping</h2>
+            <p>
+              Seller tools use a protective 8 × 6 × 1 inch mailer and 8 ounce
+              test parcel for now.
+            </p>
+            {!rates.data && (
+              <button
+                className="button button-primary"
+                onClick={() => rates.mutate()}
+                disabled={rates.isPending || order.data?.status !== "PAID"}
+              >
+                Get test shipping rates
+              </button>
+            )}
+            {rates.data?.map((rate) => (
+              <button
+                className="shipping-rate"
+                key={rate.id}
+                onClick={() => label.mutate(rate.id)}
+                disabled={label.isPending}
+              >
+                <span>
+                  <strong>
+                    {rate.carrier} {rate.service}
+                  </strong>
+                  <small>{rate.estimatedDays} business days</small>
+                </span>
+                <strong>{money(rate.amountMinor)}</strong>
+              </button>
+            ))}
+            {(rates.error || label.error) && (
+              <p className="form-error">
+                {(rates.error ?? label.error)?.message}
+              </p>
+            )}
+          </>
+        )}
+      </section>
     </main>
   );
 }

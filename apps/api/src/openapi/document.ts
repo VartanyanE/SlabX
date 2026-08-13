@@ -325,6 +325,36 @@ export const openApiDocument = {
       ],
       get: operation("getOrder", "Read a buyer or seller order", 200),
     },
+    "/shipping/rates": {
+      post: operation(
+        "getShippingRates",
+        "Validate a parcel and quote shipping services",
+        200,
+      ),
+    },
+    "/shipping/easypost/webhook": {
+      post: operation(
+        "receiveEasyPostTrackingWebhook",
+        "Verify and reconcile an EasyPost tracking event",
+        200,
+      ),
+    },
+    "/orders/{orderId}/shipping-label": {
+      parameters: [orderIdParameter()],
+      post: operation(
+        "purchaseShippingLabel",
+        "Purchase an idempotent seller shipping label",
+        201,
+      ),
+    },
+    "/orders/{orderId}/shipment": {
+      parameters: [orderIdParameter()],
+      get: operation(
+        "getOrderShipment",
+        "Read the buyer and seller tracking timeline",
+        200,
+      ),
+    },
   },
 } as const;
 
@@ -349,6 +379,15 @@ function listingIdParameter() {
 function threadIdParameter() {
   return {
     name: "threadId",
+    in: "path",
+    required: true,
+    schema: { type: "string", format: "uuid" },
+  } as const;
+}
+
+function orderIdParameter() {
+  return {
+    name: "orderId",
     in: "path",
     required: true,
     schema: { type: "string", format: "uuid" },

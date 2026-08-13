@@ -28,6 +28,14 @@ import {
 } from "./payments/routes.js";
 import { PaymentService } from "./payments/service.js";
 import { StripePaymentProvider } from "./payments/stripe.js";
+import {
+  EasyPostShippingProvider,
+  MockShippingProvider,
+} from "./shipping/provider.js";
+import { ShippingRepository } from "./shipping/repository.js";
+import { createShippingRouter } from "./shipping/routes.js";
+import { createEasyPostWebhookHandler } from "./shipping/routes.js";
+import { ShippingService } from "./shipping/service.js";
 
 loadDotenv({ path: resolve(process.cwd(), "../../.env"), quiet: true });
 const environment = loadServerEnvironment(process.env);
@@ -89,6 +97,13 @@ const paymentService =
         environment.WEB_ORIGIN,
       )
     : null;
+const shippingProvider = environment.EASYPOST_API_KEY
+  ? new EasyPostShippingProvider(environment.EASYPOST_API_KEY)
+  : new MockShippingProvider();
+const shippingService = new ShippingService(
+  new ShippingRepository(databasePool),
+  shippingProvider,
+);
 const app = createApp({
   databaseHealthCheck: createDatabaseHealthCheck(environment.DATABASE_URL),
   logger,
@@ -110,6 +125,18 @@ const app = createApp({
           identity: identityService,
         }),
         stripeWebhookHandlers: createStripeWebhookHandler(paymentService),
+      }
+    : {}),
+  shippingRouter: createShippingRouter({
+    service: shippingService,
+    identity: identityService,
+  }),
+  ...(environment.EASYPOST_WEBHOOK_SECRET
+    ? {
+        easyPostWebhookHandlers: createEasyPostWebhookHandler(
+          shippingService,
+          environment.EASYPOST_WEBHOOK_SECRET,
+        ),
       }
     : {}),
 });

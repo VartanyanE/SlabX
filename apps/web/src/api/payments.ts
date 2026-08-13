@@ -3,6 +3,9 @@ import type {
   CheckoutSession,
   ConnectedAccount,
   Order,
+  ParcelInput,
+  Shipment,
+  ShippingRate,
 } from "@slabx/contracts";
 
 type Envelope<T> = { data: T; error?: { message?: string } };
@@ -48,4 +51,15 @@ export const paymentApi = {
     }),
   orders: () => api<Order[]>("/me/orders"),
   order: (id: string) => api<Order>(`/orders/${id}`),
+  shipment: (id: string) => api<Shipment>(`/orders/${id}/shipment`),
+  shippingRates: (orderId: string, parcel: ParcelInput) =>
+    api<ShippingRate[]>("/shipping/rates", {
+      method: "POST",
+      body: JSON.stringify({ orderId, parcel }),
+    }),
+  buyLabel: (orderId: string, rateId: string) =>
+    api<Shipment>(`/orders/${orderId}/shipping-label`, {
+      method: "POST",
+      body: JSON.stringify({ rateId, idempotencyKey: crypto.randomUUID() }),
+    }),
 };

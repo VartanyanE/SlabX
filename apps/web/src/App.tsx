@@ -22,6 +22,7 @@ import {
   CheckoutPage,
   CheckoutReturnPage,
   OrdersPage,
+  OrderDetailPage,
   SellerOnboardingPage,
 } from "./PaymentsPages";
 
@@ -152,6 +153,7 @@ export function App() {
         <Route path="/checkout/return" element={<CheckoutReturnPage />} />
         <Route path="/checkout/:listingId" element={<CheckoutPage />} />
         <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/orders/:orderId" element={<OrderDetailPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <footer>

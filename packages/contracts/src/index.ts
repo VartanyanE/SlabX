@@ -346,6 +346,55 @@ export type Order = {
     cardNumber: string;
     imageUrl: string | null;
   };
+  shipment: Shipment | null;
+};
+
+export const parcelInputSchema = z.object({
+  lengthInches: z.number().positive().max(48),
+  widthInches: z.number().positive().max(48),
+  heightInches: z.number().positive().max(48),
+  weightOunces: z.number().positive().max(1120),
+});
+export const shippingRateRequestSchema = z.object({
+  orderId: z.uuid(),
+  parcel: parcelInputSchema,
+});
+export const shippingLabelPurchaseSchema = z.object({
+  rateId: z.string().min(1).max(120),
+  idempotencyKey: z.uuid(),
+});
+export type ParcelInput = z.infer<typeof parcelInputSchema>;
+export type ShippingRateRequest = z.infer<typeof shippingRateRequestSchema>;
+export type ShippingLabelPurchase = z.infer<typeof shippingLabelPurchaseSchema>;
+export type ShippingRate = {
+  id: string;
+  carrier: string;
+  service: string;
+  amountMinor: number;
+  currency: "USD";
+  estimatedDays: number;
+};
+export type TrackingEvent = {
+  id: string;
+  status: string;
+  description: string;
+  occurredAt: string;
+};
+export type Shipment = {
+  id: string;
+  orderId: string;
+  status:
+    "PENDING" | "LABEL_PURCHASED" | "IN_TRANSIT" | "DELIVERED" | "EXCEPTION";
+  carrier: string | null;
+  service: string | null;
+  trackingCode: string | null;
+  trackingUrl: string | null;
+  labelUrl: string | null;
+  postageMinor: number | null;
+  estimatedDeliveryAt: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  events: TrackingEvent[];
 };
 
 export type CheckoutSession = {

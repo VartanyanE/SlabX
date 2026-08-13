@@ -115,6 +115,14 @@ enum PaymentAttemptStatus {
   CANCELLED
 }
 
+enum ShipmentStatus {
+  PENDING
+  LABEL_PURCHASED
+  IN_TRANSIT
+  DELIVERED
+  EXCEPTION
+}
+
 model User {
   id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   emailNormalized String     @unique(map: "users_email_normalized_key") @map("email_normalized")
@@ -567,11 +575,58 @@ model Order {
   item               OrderItem?
   paymentAttempts    PaymentAttempt[]
   ledgerEntries      LedgerEntry[]
+  shipment          Shipment?
 
   @@index([buyerUserId, createdAt(sort: Desc)])
   @@index([sellerUserId, createdAt(sort: Desc)])
   @@index([listingId, status])
   @@map("orders")
+}
+
+model Shipment {
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId               String         @unique @map("order_id") @db.Uuid
+  provider              String         @default("mock")
+  providerShipmentId    String?        @unique @map("provider_shipment_id")
+  providerTrackerId     String?        @unique @map("provider_tracker_id")
+  status                ShipmentStatus @default(PENDING)
+  carrier               String?
+  service               String?
+  trackingCode          String?        @unique @map("tracking_code")
+  trackingUrl           String?        @map("tracking_url")
+  labelUrl              String?        @map("label_url")
+  postageMinor          BigInt?        @map("postage_minor")
+  currency              String         @default("USD") @db.Char(3)
+  parcelSnapshot        Json           @map("parcel_snapshot")
+  fromAddressSnapshot   Json?          @map("from_address_snapshot")
+  toAddressSnapshot     Json           @map("to_address_snapshot")
+  rateSnapshot          Json?          @map("rate_snapshot")
+  labelIdempotencyKey   String?        @unique @map("label_idempotency_key") @db.Uuid
+  estimatedDeliveryAt   DateTime?      @map("estimated_delivery_at") @db.Timestamptz(6)
+  shippedAt             DateTime?      @map("shipped_at") @db.Timestamptz(6)
+  deliveredAt           DateTime?      @map("delivered_at") @db.Timestamptz(6)
+  createdAt             DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  order                 Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  events                TrackingEvent[]
+
+  @@index([status, updatedAt])
+  @@map("shipments")
+}
+
+model TrackingEvent {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  shipmentId      String         @map("shipment_id") @db.Uuid
+  providerEventId String?        @unique @map("provider_event_id")
+  status          ShipmentStatus
+  description     String
+  location        String?
+  occurredAt      DateTime       @map("occurred_at") @db.Timestamptz(6)
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  shipment        Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId, occurredAt])
+  @@map("tracking_events")
 }
 
 model OrderItem {

@@ -107,6 +107,13 @@ This file is the source of truth for significant technical choices. Accepted dec
 - **Why:** This matches the existing marketplace model, minimizes stored compliance data, and provides a complete reconciliation path while product/legal decisions remain open.
 - **Consequences:** SlabX bears Stripe fees and destination-charge refund/dispute exposure. Shipping, tax, refunds, disputes, and live payouts remain disabled until reviewed.
 
+## ADR-016 — Provider-independent shipping with mock-first delivery
+
+- **Status:** Accepted for Milestone 8 test mode
+- **Decision:** Keep rates, label purchase, and tracking behind a shipping-provider interface; use a deterministic mock provider until EasyPost access is approved.
+- **Why:** Development can continue without credentials, while production integration becomes an adapter replacement instead of a workflow rewrite.
+- **Consequences:** Paid-order and seller ownership checks remain in SlabX, label purchase is idempotent, address and parcel data are snapshotted, and tracking events are append-only.
+
 ## Open decisions requiring owners
 
 | ID | Decision | Owner needed by |

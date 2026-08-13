@@ -862,6 +862,72 @@
           }
         }
       }
+    },
+    "/shipping/rates": {
+      "post": {
+        "operationId": "getShippingRates",
+        "summary": "Validate a parcel and quote shipping services",
+        "responses": {
+          "200": {
+            "description": "Validate a parcel and quote shipping services"
+          }
+        }
+      }
+    },
+    "/shipping/easypost/webhook": {
+      "post": {
+        "operationId": "receiveEasyPostTrackingWebhook",
+        "summary": "Verify and reconcile an EasyPost tracking event",
+        "responses": {
+          "200": {
+            "description": "Verify and reconcile an EasyPost tracking event"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}/shipping-label": {
+      "parameters": [
+        {
+          "name": "orderId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "purchaseShippingLabel",
+        "summary": "Purchase an idempotent seller shipping label",
+        "responses": {
+          "201": {
+            "description": "Purchase an idempotent seller shipping label"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}/shipment": {
+      "parameters": [
+        {
+          "name": "orderId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getOrderShipment",
+        "summary": "Read the buyer and seller tracking timeline",
+        "responses": {
+          "200": {
+            "description": "Read the buyer and seller tracking timeline"
+          }
+        }
+      }
     }
   }
 }
