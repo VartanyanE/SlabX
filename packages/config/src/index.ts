@@ -25,6 +25,8 @@ const serverEnvironmentSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().min(1).optional(),
   STRIPE_SECRET_KEY: z.string().startsWith("sk_test_").optional(),
   STRIPE_WEBHOOK_SECRET: z.string().startsWith("whsec_").optional(),
+  EASYPOST_API_KEY: z.string().startsWith("EZTK").optional(),
+  EASYPOST_WEBHOOK_SECRET: z.string().min(24).optional(),
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),

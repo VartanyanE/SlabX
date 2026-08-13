@@ -678,6 +678,61 @@ details summary {
   max-width: 72rem;
   margin-inline: auto;
 }
+
+.fulfillment-card {
+  max-width: 680px;
+}
+.shipping-rate {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 1rem;
+  color: inherit;
+  text-align: left;
+  background: var(--surface-raised, #171717);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.shipping-rate span,
+.tracking-timeline p {
+  display: grid;
+  gap: 0.2rem;
+}
+.shipping-rate small,
+.tracking-timeline small {
+  color: var(--text-muted, #a7a7a7);
+}
+.tracking-timeline {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.tracking-timeline > div {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 0.8rem;
+  align-items: start;
+}
+.tracking-timeline > div > span {
+  width: 12px;
+  height: 12px;
+  margin-top: 0.25rem;
+  border-radius: 50%;
+  background: #bdff34;
+  box-shadow: 0 0 0 4px rgba(189, 255, 52, 0.12);
+}
+.tracking-timeline p {
+  margin: 0;
+}
+.fulfillment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
 .payment-card {
   display: grid;
   gap: 1rem;

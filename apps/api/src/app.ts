@@ -24,7 +24,9 @@ type AppDependencies = {
   listingRouter?: Router;
   offerRouter?: Router;
   paymentRouter?: Router;
+  shippingRouter?: Router;
   stripeWebhookHandlers?: RequestHandler[];
+  easyPostWebhookHandlers?: RequestHandler[];
 };
 
 export function createApp({
@@ -38,7 +40,9 @@ export function createApp({
   listingRouter,
   offerRouter,
   paymentRouter,
+  shippingRouter,
   stripeWebhookHandlers,
+  easyPostWebhookHandlers,
 }: AppDependencies): Express {
   const app = express();
   app.disable("x-powered-by");
@@ -57,6 +61,8 @@ export function createApp({
   );
   if (stripeWebhookHandlers)
     app.post("/api/v1/payments/stripe/webhook", ...stripeWebhookHandlers);
+  if (easyPostWebhookHandlers)
+    app.post("/api/v1/shipping/easypost/webhook", ...easyPostWebhookHandlers);
   app.use(express.json({ limit: "1mb" }));
 
   const live: RequestHandler = (_request, response) => {
@@ -102,6 +108,7 @@ export function createApp({
   if (listingRouter) app.use("/api/v1", listingRouter);
   if (offerRouter) app.use("/api/v1", offerRouter);
   if (paymentRouter) app.use("/api/v1", paymentRouter);
+  if (shippingRouter) app.use("/api/v1", shippingRouter);
 
   app.use((_request, response) => {
     response.status(404).json({
