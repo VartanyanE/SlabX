@@ -2,7 +2,7 @@
 
 SlabX is a planned mobile-first marketplace for buying, selling, offering on, collecting, and eventually trading collectible cards.
 
-This repository includes Milestones 1–6: platform foundation, authentication and profiles, catalog and collection, image uploads, listings and discovery, and offer negotiation.
+This repository includes the complete Milestones 1–11 MVP foundation: identity, catalog, collection, listings, offers, checkout, fulfillment, trust, financial operations, and launch hardening.
 
 ## Product vision
 
@@ -36,6 +36,8 @@ SlabX will launch with basketball, baseball, football, and Pokémon cards while 
 | [API design](docs/API_DESIGN.md) | REST conventions, endpoints, idempotency, errors |
 | [Security](docs/SECURITY.md) | Threat model and marketplace security controls |
 | [Testing](docs/TESTING.md) | Unit, API, integration, E2E, CI quality gates |
+| [Production runbook](docs/PRODUCTION_RUNBOOK.md) | SLOs, incident response, rollback, backup, provider degradation |
+| [Launch checklist](docs/LAUNCH_CHECKLIST.md) | Engineering, operations, security, legal, and go/no-go gates |
 | [Roadmap](docs/ROADMAP.md) | Phased milestones and definitions of done |
 | [Development](docs/DEVELOPMENT.md) | Local/staging/production workflow and Git conventions |
 | [Decisions](docs/DECISIONS.md) | Architecture Decision Record log and open decisions |
@@ -113,6 +115,10 @@ Use `pnpm check` for the full local quality suite and `pnpm test:e2e` for browse
 
 Before staging, configure the providers listed in `.env.example`.
 
-Milestone 7 adds Stripe Connect seller onboarding, buy-now and accepted-offer checkout, immutable order snapshots, an 8% seller-paid fee, signed webhook reconciliation, balanced ledger entries, payment recovery, and buyer/seller order views. Payments remain test-mode only until shipping, tax, refund, dispute, and payout policies are approved. See `docs/PAYMENT_POLICY.md`.
+Milestone 7 adds Stripe Connect seller onboarding, buy-now and accepted-offer checkout, immutable order snapshots, an 8% seller-paid fee, signed webhook reconciliation, balanced ledger entries, payment recovery, and buyer/seller order views. See `docs/PAYMENT_POLICY.md`.
 
-The next product milestone is **Milestone 8: Shipping and fulfillment**.
+Milestones 8–10 add EasyPost shipping and tracking, transaction-backed reviews and moderation, refunds, disputes, transfers, payout holds, and financial reconciliation.
+
+Milestone 11 adds API abuse and timeout controls, production configuration gates, graceful shutdown, resilient offline/error UI, browser and container hardening, retention maintenance, operational indexes, load and restore tools, SLOs, incident procedures, and the public-launch approval checklist.
+
+The MVP engineering scope is complete. Public release still requires the human security, legal, finance, and operations approvals recorded in `docs/LAUNCH_CHECKLIST.md`. The next product milestone is **Milestone 12: Trading foundation**.

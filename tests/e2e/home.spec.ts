@@ -18,4 +18,8 @@ test("renders an accessible platform landing page", async ({ page }) => {
     page.getByRole("heading", { name: /great cards deserve/i }),
   ).toBeVisible();
   await expect(page.getByText("Platform online")).toBeVisible();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("link", { name: "Skip to main content" }),
+  ).toBeFocused();
 });

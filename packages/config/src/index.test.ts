@@ -14,4 +14,22 @@ describe("loadServerEnvironment", () => {
   it("fails fast when the database URL is absent", () => {
     expect(() => loadServerEnvironment({})).toThrow();
   });
+
+  it("rejects development authentication secrets in production", () => {
+    expect(() =>
+      loadServerEnvironment({
+        NODE_ENV: "production",
+        DATABASE_URL: "postgresql://example",
+      }),
+    ).toThrow(/Production requires/);
+  });
+
+  it("accepts Stripe live keys without weakening test-key validation", () => {
+    expect(
+      loadServerEnvironment({
+        DATABASE_URL: "postgresql://example",
+        STRIPE_SECRET_KEY: "sk_live_example",
+      }).STRIPE_SECRET_KEY,
+    ).toBe("sk_live_example");
+  });
 });

@@ -7,9 +7,9 @@ export function createDatabasePool(connectionString: string): pg.Pool {
 }
 
 export function createDatabaseHealthCheck(
-  connectionString: string,
+  source: string | pg.Pool,
 ): DatabaseHealthCheck {
-  const pool = createDatabasePool(connectionString);
+  const pool = typeof source === "string" ? createDatabasePool(source) : source;
   return async () => {
     await pool.query("SELECT 1");
   };
