@@ -734,6 +734,25 @@ details summary {
 .report-success {
   color: var(--color-success, #167348);
 }
+
+.financial-metrics {
+  margin-bottom: var(--space-6);
+}
+.financial-columns {
+  display: grid;
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+.financial-columns > div {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+@media (min-width: 48rem) {
+  .financial-columns {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 .shipping-rate {
   width: 100%;
   display: flex;

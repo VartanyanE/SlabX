@@ -456,6 +456,88 @@ export type ModerationReport = {
   createdAt: string;
 };
 
+export const refundRequestSchema = z.object({
+  orderId: z.uuid(),
+  amountMinor: z.number().int().positive(),
+  reasonCode: z.enum([
+    "NOT_AS_DESCRIBED",
+    "DAMAGED",
+    "COUNTERFEIT",
+    "NOT_RECEIVED",
+    "AGREED_RETURN",
+    "OTHER",
+  ]),
+  details: z.string().trim().min(10).max(2000),
+  idempotencyKey: z.uuid(),
+});
+export const refundDecisionSchema = z.object({
+  decision: z.enum(["APPROVE", "REJECT"]),
+  note: z.string().trim().min(1).max(2000),
+});
+export type RefundRequestInput = z.infer<typeof refundRequestSchema>;
+export type RefundDecision = z.infer<typeof refundDecisionSchema>;
+export type RefundRecord = {
+  id: string;
+  orderId: string;
+  amountMinor: number;
+  currency: "USD";
+  reasonCode: string;
+  details: string | null;
+  status:
+    | "REQUESTED"
+    | "APPROVED"
+    | "REJECTED"
+    | "PROCESSING"
+    | "SUCCEEDED"
+    | "FAILED";
+  failureMessage: string | null;
+  createdAt: string;
+};
+export type FinancialOverview = {
+  openRefunds: number;
+  openDisputes: number;
+  activeHoldsMinor: number;
+  reconciliationDifferenceMinor: number;
+  disputes: Array<{
+    id: string;
+    orderId: string;
+    amountMinor: number;
+    reason: string;
+    status: string;
+    evidenceDueAt: string | null;
+  }>;
+  holds: Array<{
+    id: string;
+    orderId: string;
+    amountMinor: number;
+    reasonCode: string;
+    status: string;
+    releaseAt: string | null;
+  }>;
+  differences: Array<{
+    id: string;
+    orderId: string | null;
+    providerType: string;
+    providerId: string;
+    differenceMinor: number;
+    reconciledAt: string;
+  }>;
+};
+export type SellerFinancialSummary = {
+  lifetimeProceedsMinor: number;
+  refundedMinor: number;
+  activeHoldsMinor: number;
+  paidOutMinor: number;
+  currency: "USD";
+  payouts: Array<{
+    id: string;
+    amountMinor: number;
+    status: string;
+    arrivalAt: string | null;
+    createdAt: string;
+  }>;
+};
+
 export type CheckoutSession = {
   order: Order;
   checkoutUrl: string;

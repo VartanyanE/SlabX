@@ -326,6 +326,9 @@ export function SellingPage() {
         <Link className="button button-secondary" to="/seller/onboarding">
           Payment setup
         </Link>
+        <Link className="button button-secondary" to="/seller/balance">
+          Proceeds and payouts
+        </Link>
       </header>
       <div className="card-grid">
         {listings.data?.map((listing) => (

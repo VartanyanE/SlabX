@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router";
 import { paymentApi } from "./api/payments";
+import { RefundRequestForm } from "./FinancialPages";
 
 const money = (minor: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
@@ -405,6 +406,16 @@ export function OrderDetailPage() {
               </button>
             </form>
           )}
+        </section>
+      )}
+      {order.data?.status === "PAID" && (
+        <section className="account-card payment-card trust-card">
+          <p className="section-kicker">ORDER SUPPORT</p>
+          <h2>Something wrong with this order?</h2>
+          <RefundRequestForm
+            orderId={orderId}
+            maxMinor={order.data.subtotalMinor}
+          />
         </section>
       )}
     </main>
