@@ -21,7 +21,7 @@ services:
     dockerfilePath: ./apps/api/Dockerfile
     healthCheckPath: /api/v1/health/ready
     maxShutdownDelaySeconds: 15
-    preDeployCommand: pnpm --filter @slabx/database db:migrate:deploy && pnpm --filter @slabx/database db:seed
+    preDeployCommand: pnpm db:staging:prepare
     envVars:
       - key: NODE_ENV
         value: production
