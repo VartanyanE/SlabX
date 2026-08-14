@@ -18,6 +18,7 @@
     "db:generate": "pnpm --filter @slabx/database db:generate",
     "db:migrate": "pnpm --filter @slabx/database db:migrate",
     "db:seed": "pnpm --filter @slabx/database db:seed",
+    "db:staging:prepare": "pnpm --filter @slabx/database db:migrate:deploy && pnpm --filter @slabx/database db:seed",
     "openapi:generate": "pnpm --filter @slabx/api openapi:generate",
     "openapi:check": "pnpm openapi:generate && git diff --exit-code -- docs/openapi.json",
     "format": "prettier --write .",
