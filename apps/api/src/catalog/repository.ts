@@ -6,6 +6,7 @@ import type {
   CollectionItem,
   CollectionItemInput,
   CollectionQuery,
+  ManualCatalogCardInput,
 } from "@slabx/contracts";
 
 export class CatalogRepository {
@@ -75,6 +76,84 @@ export class CatalogRepository {
         )
       ).rows[0] ?? null
     );
+  }
+  async findMatchingCard(input: CatalogCardInput) {
+    return (
+      (
+        await this.pool.query<CatalogCard>(
+          `${cardSelect()} WHERE c.deleted_at IS NULL AND c.status IN ('ACTIVE','PENDING_REVIEW')
+           AND c.category_id=$1 AND c.card_set_id=$2 AND c.year=$3
+           AND lower(trim(c.card_number))=lower(trim($4))
+           AND lower(trim(c.player_or_character))=lower(trim($5))
+           AND lower(trim(COALESCE(c.variant,'')))=lower(trim(COALESCE($6,'')))
+           LIMIT 1`,
+          [
+            input.categoryId,
+            input.cardSetId,
+            input.year,
+            input.cardNumber,
+            input.playerOrCharacter,
+            input.variant ?? null,
+          ],
+        )
+      ).rows[0] ?? null
+    );
+  }
+  async resolveManualReferences(input: ManualCatalogCardInput) {
+    const client = await this.pool.connect();
+    const normalizedCategory = normalize(input.categoryName);
+    const normalizedSet = normalize(input.setName);
+    const slug = normalizedCategory
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    try {
+      await client.query("BEGIN");
+      const category = await client.query<{ id: string }>(
+        `INSERT INTO categories (slug,name,kind,sort_order)
+         VALUES ($1,$2,'OTHER',1000)
+         ON CONFLICT (slug) DO UPDATE SET active=true
+         RETURNING id`,
+        [slug, input.categoryName.trim()],
+      );
+      let cardSet = await client.query<{ id: string }>(
+        `SELECT id FROM card_sets
+         WHERE category_id=$1 AND name_normalized=$2 AND year_start=$3
+         ORDER BY id LIMIT 1`,
+        [category.rows[0]!.id, normalizedSet, input.year],
+      );
+      if (!cardSet.rows[0]) {
+        const manufacturer = await client.query<{ id: string }>(
+          `INSERT INTO manufacturers (name_normalized,name_display)
+           VALUES ('unspecified','Unspecified')
+           ON CONFLICT (name_normalized) DO UPDATE SET name_display=EXCLUDED.name_display
+           RETURNING id`,
+        );
+        cardSet = await client.query<{ id: string }>(
+          `INSERT INTO card_sets (category_id,manufacturer_id,name,name_normalized,year_start)
+           VALUES ($1,$2,$3,$4,$5)
+           ON CONFLICT (category_id,manufacturer_id,name_normalized,year_start)
+           DO UPDATE SET name=EXCLUDED.name
+           RETURNING id`,
+          [
+            category.rows[0]!.id,
+            manufacturer.rows[0]!.id,
+            input.setName.trim(),
+            normalizedSet,
+            input.year,
+          ],
+        );
+      }
+      await client.query("COMMIT");
+      return {
+        categoryId: category.rows[0]!.id,
+        cardSetId: cardSet.rows[0]!.id,
+      };
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
   async createCard(
     userId: string,
@@ -205,4 +284,8 @@ export class CatalogRepository {
 function cardSelect() {
   return `SELECT c.id,c.category_id AS "categoryId",cat.slug AS "categorySlug",cat.name AS "categoryName",c.card_set_id AS "cardSetId",s.name AS "setName",m.name_display AS manufacturer,c.player_or_character AS "playerOrCharacter",c.year,c.card_number AS "cardNumber",c.subset,c.variant,c.is_rookie AS "isRookie",c.status
     FROM catalog_cards c JOIN categories cat ON cat.id=c.category_id JOIN card_sets s ON s.id=c.card_set_id JOIN manufacturers m ON m.id=s.manufacturer_id`;
+}
+
+function normalize(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
 }

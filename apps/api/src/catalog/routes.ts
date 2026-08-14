@@ -8,6 +8,7 @@ import {
   collectionQuerySchema,
   mediaConfirmationSchema,
   mediaReorderSchema,
+  manualCatalogCardInputSchema,
 } from "@slabx/contracts";
 import { IdentityService } from "../identity/service.js";
 import { MediaService } from "../media/service.js";
@@ -97,6 +98,22 @@ export function createCatalogRouter(options: {
       handle(e, res);
     }
   });
+  router.post(
+    "/catalog/cards/manual",
+    requireAuth,
+    requireCsrf,
+    async (req, res) => {
+      try {
+        const card = await options.service.createManualCard(
+          res.locals.user.id,
+          parse(manualCatalogCardInputSchema, req.body),
+        );
+        res.status(201).json({ data: card, meta: { requestId: req.id } });
+      } catch (e) {
+        handle(e, res);
+      }
+    },
+  );
   router.get("/me/collection/items", requireAuth, async (req, res) => {
     try {
       const result = await options.service.listItems(

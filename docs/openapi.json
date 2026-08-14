@@ -272,6 +272,17 @@
         }
       }
     },
+    "/catalog/cards/manual": {
+      "post": {
+        "operationId": "submitManualCatalogCard",
+        "summary": "Resolve manually entered category and set names and submit a card",
+        "responses": {
+          "201": {
+            "description": "Resolve manually entered category and set names and submit a card"
+          }
+        }
+      }
+    },
     "/catalog/cards/{cardId}": {
       "parameters": [
         {

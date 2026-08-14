@@ -94,6 +94,13 @@ export const openApiDocument = {
         201,
       ),
     },
+    "/catalog/cards/manual": {
+      post: operation(
+        "submitManualCatalogCard",
+        "Resolve manually entered category and set names and submit a card",
+        201,
+      ),
+    },
     "/catalog/cards/{cardId}": {
       parameters: [
         {

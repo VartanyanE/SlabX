@@ -4,6 +4,7 @@ import type {
   CatalogQuery,
   CollectionItemInput,
   CollectionQuery,
+  ManualCatalogCardInput,
 } from "@slabx/contracts";
 import { CatalogRepository } from "./repository.js";
 
@@ -34,6 +35,8 @@ export class CatalogService {
     return this.repository.getCard(id);
   }
   async createCard(userId: string, input: CatalogCardInput) {
+    const existing = await this.repository.findMatchingCard(input);
+    if (existing) return existing;
     const fingerprint = createHash("sha256")
       .update(
         [
@@ -51,14 +54,16 @@ export class CatalogService {
     try {
       return await this.repository.createCard(userId, input, fingerprint);
     } catch (error) {
-      if (isUnique(error))
-        throw new CatalogError(
-          "CATALOG_DUPLICATE",
-          409,
-          "This card already exists in the catalog.",
-        );
+      if (isUnique(error)) {
+        const concurrentMatch = await this.repository.findMatchingCard(input);
+        if (concurrentMatch) return concurrentMatch;
+      }
       throw error;
     }
+  }
+  async createManualCard(userId: string, input: ManualCatalogCardInput) {
+    const references = await this.repository.resolveManualReferences(input);
+    return this.createCard(userId, { ...input, ...references });
   }
   async createItem(userId: string, input: CollectionItemInput) {
     try {
