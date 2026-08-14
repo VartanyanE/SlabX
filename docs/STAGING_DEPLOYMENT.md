@@ -46,3 +46,7 @@ Use newly generated webhook secrets for staging.
 8. Perform the backup/restore and rollback drills from the production runbook.
 
 Do not seed production. Staging may use only deterministic synthetic data.
+
+The staging API pre-deploy command runs the idempotent reference-data seed after
+migrations. Production-mode seeding is rejected unless the deployment explicitly
+sets `DATABASE_SEED_ALLOWED=true`; this opt-in belongs only on staging services.

@@ -3,6 +3,19 @@ import pg from "pg";
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required");
 
+if (
+  process.env.NODE_ENV === "production" &&
+  process.env.DATABASE_SEED_ALLOWED !== "true"
+) {
+  throw new Error(
+    "Database seeding is disabled in production unless DATABASE_SEED_ALLOWED=true",
+  );
+}
+
+const seedEnvironment =
+  process.env.DATABASE_SEED_ENVIRONMENT ??
+  (process.env.NODE_ENV === "production" ? "production" : "development");
+
 const client = new pg.Client({ connectionString: databaseUrl });
 await client.connect();
 try {
@@ -10,7 +23,7 @@ try {
     `INSERT INTO system_metadata (key, value, updated_at)
      VALUES ($1, $2::jsonb, CURRENT_TIMESTAMP)
      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
-    ["seed", JSON.stringify({ version: 1, environment: "development" })],
+    ["seed", JSON.stringify({ version: 1, environment: seedEnvironment })],
   );
   await client.query(`
     INSERT INTO categories (id,slug,name,kind,sort_order) VALUES
