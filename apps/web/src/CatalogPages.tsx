@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, type FormEvent, useState } from "react";
 import type { CollectionItem } from "@slabx/contracts";
-import { Link, Navigate, useParams } from "react-router";
+import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { catalogApi, uploadToCloudinary } from "./api/catalog";
 
 export function CatalogPage() {
@@ -342,7 +342,7 @@ export function CollectionPage() {
       <header className="catalog-heading">
         <p className="section-kicker">MY COLLECTION</p>
         <h1>Your cards, copy by copy.</h1>
-        <Link className="button button-primary" to="/catalog">
+        <Link className="button button-primary" to="/collection/add">
           Add a card
         </Link>
       </header>
@@ -377,6 +377,255 @@ export function CollectionPage() {
           Your collection is ready for its first card.
         </p>
       )}
+    </main>
+  );
+}
+
+export function AddCollectionCardPage() {
+  const navigate = useNavigate();
+  const [categoryName, setCategoryName] = useState("");
+  const [setName, setSetName] = useState("");
+  const [condition, setCondition] = useState<"RAW" | "GRADED">("RAW");
+  const [files, setFiles] = useState<File[]>([]);
+  const [progress, setProgress] = useState<number | null>(null);
+  const graders = useQuery({
+    queryKey: ["graders"],
+    queryFn: catalogApi.graders,
+  });
+  const mutation = useMutation({
+    mutationFn: async (form: HTMLFormElement) => {
+      const data = new FormData(form);
+      const card = await catalogApi.createManualCard({
+        categoryName,
+        setName,
+        playerOrCharacter: String(data.get("playerOrCharacter")),
+        year: Number(data.get("year")),
+        cardNumber: String(data.get("cardNumber")),
+        variant: String(data.get("variant")) || null,
+        isRookie: Boolean(data.get("isRookie")),
+      });
+      const base = {
+        catalogCardId: card.id,
+        itemNotes: String(data.get("notes")) || null,
+        visibility: data.get("public")
+          ? ("PUBLIC" as const)
+          : ("PRIVATE" as const),
+        availabilityStatus: "NOT_FOR_SALE" as const,
+      };
+      const item = await catalogApi.createItem(
+        condition === "RAW"
+          ? {
+              ...base,
+              conditionType: "RAW",
+              rawCondition: String(data.get("rawCondition")) as "NEAR_MINT",
+            }
+          : {
+              ...base,
+              conditionType: "GRADED",
+              gradingCompanyId: String(data.get("gradingCompanyId")),
+              grade: Number(data.get("grade")),
+              certificationNumber: String(data.get("certificationNumber")),
+            },
+      );
+      for (const [index, file] of files.entries()) {
+        const signed = await catalogApi.signUpload(item.id);
+        if (file.size > signed.maxBytes)
+          throw new Error(
+            "Your card was added, but each photo must be under 12 MB. Add photos from your collection.",
+          );
+        const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+        if (!signed.allowedFormats.includes(extension))
+          throw new Error(
+            "Your card was added, but photos must be JPG, PNG, WebP, or HEIC. Add photos from your collection.",
+          );
+        const uploaded = await uploadToCloudinary(signed, file, (value) =>
+          setProgress(Math.round(((index + value / 100) / files.length) * 100)),
+        );
+        await catalogApi.confirmUpload(item.id, uploaded.public_id);
+      }
+      return item;
+    },
+    onSuccess: () => navigate("/collection"),
+  });
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    mutation.mutate(event.currentTarget);
+  }
+  function choose(event: ChangeEvent<HTMLInputElement>) {
+    setFiles(Array.from(event.target.files ?? []).slice(0, 12));
+  }
+  return (
+    <main id="main-content" className="catalog-page add-card-page">
+      <header className="catalog-heading">
+        <p className="section-kicker">ADD TO COLLECTION</p>
+        <h1>Add your card in one step.</h1>
+        <p>Enter the card details, describe your copy, and add its photos.</p>
+      </header>
+      <form className="auth-form add-card-form" onSubmit={submit}>
+        <fieldset>
+          <legend>Card details</legend>
+          <div className="add-card-fields">
+            <label className="form-field">
+              <span>Category</span>
+              <input
+                name="categoryName"
+                value={categoryName}
+                onChange={(event) => {
+                  setCategoryName(event.target.value);
+                  setSetName("");
+                }}
+                placeholder="Example: Basketball"
+                required
+              />
+            </label>
+            <label className="form-field">
+              <span>Set</span>
+              <input
+                name="setName"
+                value={setName}
+                onChange={(event) => setSetName(event.target.value)}
+                placeholder="Example: Prizm"
+                required
+              />
+            </label>
+            <label className="form-field">
+              <span>Player or character</span>
+              <input name="playerOrCharacter" required />
+            </label>
+            <label className="form-field">
+              <span>Year</span>
+              <input name="year" type="number" min="1880" max="2100" required />
+            </label>
+            <label className="form-field">
+              <span>Card number</span>
+              <input name="cardNumber" required />
+            </label>
+            <label className="form-field">
+              <span>Variant</span>
+              <input name="variant" placeholder="Optional" />
+            </label>
+          </div>
+          <label className="check-field">
+            <input type="checkbox" name="isRookie" /> Rookie card
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Your copy</legend>
+          <div className="add-card-fields">
+            <label className="form-field">
+              <span>Condition type</span>
+              <select
+                value={condition}
+                onChange={(event) =>
+                  setCondition(event.target.value as "RAW" | "GRADED")
+                }
+              >
+                <option value="RAW">Raw</option>
+                <option value="GRADED">Graded</option>
+              </select>
+            </label>
+            {condition === "RAW" ? (
+              <label className="form-field">
+                <span>Condition</span>
+                <select name="rawCondition">
+                  <option value="MINT">Mint</option>
+                  <option value="NEAR_MINT">Near Mint</option>
+                  <option value="EXCELLENT">Excellent</option>
+                  <option value="VERY_GOOD">Very Good</option>
+                  <option value="GOOD">Good</option>
+                  <option value="FAIR">Fair</option>
+                  <option value="POOR">Poor</option>
+                </select>
+              </label>
+            ) : (
+              <>
+                <label className="form-field">
+                  <span>Grading company</span>
+                  <select name="gradingCompanyId" required>
+                    {graders.data?.map((grader) => (
+                      <option key={grader.id} value={grader.id}>
+                        {grader.code} — {grader.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="form-field">
+                  <span>Grade</span>
+                  <input
+                    name="grade"
+                    type="number"
+                    min="1"
+                    max="10"
+                    step="0.5"
+                    required
+                  />
+                </label>
+                <label className="form-field">
+                  <span>Certification number</span>
+                  <input name="certificationNumber" required />
+                </label>
+              </>
+            )}
+          </div>
+          <label className="form-field">
+            <span>Notes</span>
+            <textarea
+              name="notes"
+              maxLength={1000}
+              placeholder="Optional details about this copy"
+            />
+          </label>
+          <label className="check-field">
+            <input name="public" type="checkbox" /> Show this card publicly
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Photos</legend>
+          <label className="image-picker button button-secondary">
+            {files.length
+              ? `${files.length} photo${files.length === 1 ? "" : "s"} selected`
+              : "Choose photos"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic"
+              multiple
+              required
+              onChange={choose}
+            />
+          </label>
+          <p className="image-guidance">
+            Add the front first, then the back and close-up details. Up to 12
+            photos.
+          </p>
+          {files.length > 0 && (
+            <ul className="selected-files">
+              {files.map((file) => (
+                <li key={`${file.name}-${file.size}`}>{file.name}</li>
+              ))}
+            </ul>
+          )}
+        </fieldset>
+        {mutation.error && (
+          <p className="form-error" role="alert">
+            {mutation.error.message}
+          </p>
+        )}
+        <div className="add-card-actions">
+          <Link className="button button-secondary" to="/collection">
+            Cancel
+          </Link>
+          <button
+            className="button button-primary"
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending
+              ? progress === null
+                ? "Adding card…"
+                : `Uploading photos ${progress}%`
+              : "Add to collection"}
+          </button>
+        </div>
+      </form>
     </main>
   );
 }

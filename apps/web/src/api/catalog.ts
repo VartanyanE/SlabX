@@ -3,6 +3,7 @@ import type {
   CatalogCardInput,
   CollectionItem,
   CollectionItemInput,
+  ManualCatalogCardInput,
   SignedUpload,
 } from "@slabx/contracts";
 
@@ -22,7 +23,20 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (response.status === 204) return undefined as T;
-  const payload = (await response.json()) as Envelope<T>;
+  const body = await response.text();
+  if (!body) {
+    throw new Error(
+      response.ok
+        ? "The server returned an empty response. Please try again."
+        : "The SlabX API is unavailable. Please try again shortly.",
+    );
+  }
+  let payload: Envelope<T>;
+  try {
+    payload = JSON.parse(body) as Envelope<T>;
+  } catch {
+    throw new Error("The SlabX API returned an invalid response.");
+  }
   if (!response.ok)
     throw new Error(payload.error?.message ?? "Something went wrong.");
   return payload.data;
@@ -32,7 +46,7 @@ export const catalogApi = {
     api<{ id: string; slug: string; name: string }[]>("/categories"),
   graders: () =>
     api<{ id: string; code: string; name: string }[]>("/grading-companies"),
-  sets: (categoryId: string) =>
+  sets: (categoryId?: string) =>
     api<
       {
         id: string;
@@ -41,7 +55,11 @@ export const catalogApi = {
         yearStart: number;
         manufacturer: string;
       }[]
-    >(`/catalog/sets?categoryId=${encodeURIComponent(categoryId)}`),
+    >(
+      categoryId
+        ? `/catalog/sets?categoryId=${encodeURIComponent(categoryId)}`
+        : "/catalog/sets",
+    ),
   search: (input: { q?: string; category?: string }) => {
     const query = new URLSearchParams();
     if (input.q) query.set("q", input.q);
@@ -51,6 +69,11 @@ export const catalogApi = {
   card: (id: string) => api<CatalogCard>(`/catalog/cards/${id}`),
   createCard: (input: CatalogCardInput) =>
     api<CatalogCard>("/catalog/cards", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  createManualCard: (input: ManualCatalogCardInput) =>
+    api<CatalogCard>("/catalog/cards/manual", {
       method: "POST",
       body: JSON.stringify(input),
     }),

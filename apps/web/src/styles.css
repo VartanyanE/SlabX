@@ -532,6 +532,36 @@ details summary {
   gap: 2rem;
   margin-top: 2rem;
 }
+.add-card-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 58rem;
+}
+.add-card-form fieldset {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.add-card-form legend {
+  padding: 0 0.4rem;
+  color: var(--lime);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.add-card-fields,
+.add-card-actions {
+  display: grid;
+  gap: 1rem;
+}
+.selected-files {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #aebbb4;
+}
 .empty-state {
   padding: 3rem 1rem;
   text-align: center;
@@ -993,6 +1023,13 @@ footer {
   .card-detail {
     grid-template-columns: 1fr minmax(22rem, 0.7fr);
     align-items: start;
+  }
+  .add-card-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .add-card-actions {
+    grid-template-columns: repeat(2, max-content);
+    justify-content: end;
   }
   .listing-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

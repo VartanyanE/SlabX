@@ -10,7 +10,12 @@ import {
   ResetPasswordPage,
   VerifyEmailPage,
 } from "./AuthPages";
-import { CatalogCardPage, CatalogPage, CollectionPage } from "./CatalogPages";
+import {
+  AddCollectionCardPage,
+  CatalogCardPage,
+  CatalogPage,
+  CollectionPage,
+} from "./CatalogPages";
 import {
   ListingDetailPage,
   MarketplacePage,
@@ -170,6 +175,7 @@ export function App() {
         <Route path="/catalog" element={<CatalogPage />} />
         <Route path="/catalog/:cardId" element={<CatalogCardPage />} />
         <Route path="/collection" element={<CollectionPage />} />
+        <Route path="/collection/add" element={<AddCollectionCardPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
         <Route path="/marketplace/:listingId" element={<ListingDetailPage />} />
         <Route path="/sell" element={<SellPage />} />

@@ -108,6 +108,22 @@ export const catalogCardInputSchema = z.object({
   variant: z.string().trim().max(100).nullable().optional(),
   isRookie: z.boolean().default(false),
 });
+export const manualCatalogCardInputSchema = catalogCardInputSchema
+  .omit({ categoryId: true, cardSetId: true })
+  .extend({
+    categoryName: z
+      .string()
+      .trim()
+      .min(1)
+      .max(80)
+      .regex(/[a-zA-Z0-9]/, "Category must include a letter or number"),
+    setName: z
+      .string()
+      .trim()
+      .min(1)
+      .max(120)
+      .regex(/[a-zA-Z0-9]/, "Set must include a letter or number"),
+  });
 
 const collectionBaseSchema = z.object({
   catalogCardId: z.uuid(),
@@ -149,6 +165,9 @@ export const collectionQuerySchema = z.object({
 
 export type CatalogQuery = z.infer<typeof catalogQuerySchema>;
 export type CatalogCardInput = z.infer<typeof catalogCardInputSchema>;
+export type ManualCatalogCardInput = z.infer<
+  typeof manualCatalogCardInputSchema
+>;
 export type CollectionItemInput = z.infer<typeof collectionItemInputSchema>;
 export type CollectionQuery = z.infer<typeof collectionQuerySchema>;
 
